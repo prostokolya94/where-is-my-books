@@ -7,6 +7,7 @@ import BooksPage from './pages/BooksPage';
 import TabPage from './pages/TabPage';
 import CategoriesPage from './pages/CategoriesPage';
 import StatsPage from './pages/StatsPage';
+import PlansPage from './pages/PlansPage';
 import TabEditorModal from './components/TabEditorModal';
 
 const App = observer(() => {
@@ -23,6 +24,7 @@ const App = observer(() => {
           <Route path="/tabs/:tabId" element={<TabPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/stats" element={<StatsPage />} />
+          <Route path="/plans" element={<PlansPage />} />
         </Routes>
       </main>
       <TabEditorModal />

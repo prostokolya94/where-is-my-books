@@ -83,3 +83,53 @@ export interface StatsResponse {
   status: BookStatus | null;
   statusTotals: Record<BookStatus, number>;
 }
+
+export interface PlanBookRef {
+  id: number;
+  title: string;
+}
+
+export interface PlanSubrow {
+  id: number;
+  rowId: number;
+  name: string;
+  purchased: boolean;
+  bookId: number | null;
+  book: PlanBookRef | null;
+  sortOrder: number;
+}
+
+export interface PlanRow {
+  id: number;
+  yearId: number;
+  name: string;
+  purchased: boolean;
+  bookId: number | null;
+  book: PlanBookRef | null;
+  sortOrder: number;
+  subrows: PlanSubrow[];
+}
+
+export interface PlanYear {
+  id: number;
+  year: number;
+  sortOrder: number;
+  rows: PlanRow[];
+}
+
+export interface PlanSubrowMutationResult {
+  row: PlanRow;
+  subrow?: PlanSubrow;
+}
+
+export interface PlanRowPatch {
+  name?: string;
+  purchased?: boolean;
+  bookId?: number | null;
+}
+
+export interface PlanSubrowPatch {
+  name?: string;
+  purchased?: boolean;
+  bookId?: number | null;
+}

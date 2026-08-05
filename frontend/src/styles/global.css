@@ -1105,6 +1105,228 @@ textarea {
   background: #fbf7ef;
 }
 
+/* ===== Plans page ===== */
+
+.plan-year-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.plan-year-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.plan-year-tab:hover {
+  border-color: var(--teal);
+  color: var(--pine);
+}
+
+.plan-year-tab.active {
+  background: var(--pine);
+  border-color: var(--pine);
+  color: #f6efe2;
+  box-shadow: var(--shadow-sm);
+}
+
+.plan-year-tab-close {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  padding: 1px 5px;
+  opacity: 0.65;
+}
+
+.plan-year-tab-close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.plan-year-add {
+  padding: 8px 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  transition: all 0.15s ease;
+}
+
+.plan-year-add:hover {
+  border-color: var(--clay);
+  color: var(--clay);
+  background: rgba(192, 107, 63, 0.06);
+}
+
+.plan-year-draft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-year-draft input {
+  width: 100px;
+  padding: 8px 12px;
+  border: 1px solid var(--teal);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.plan-year-draft input:focus {
+  outline: none;
+}
+
+.plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-row {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease;
+}
+
+.plan-row.purchased {
+  border-color: rgba(61, 139, 95, 0.45);
+}
+
+.plan-row-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  flex-wrap: wrap;
+}
+
+.plan-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.plan-check input[type='checkbox'] {
+  width: 19px;
+  height: 19px;
+  accent-color: var(--read);
+  cursor: pointer;
+}
+
+.plan-check input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.plan-name-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+.plan-name-input:hover {
+  border-color: var(--line);
+  background: var(--surface-soft);
+}
+
+.plan-name-input:focus {
+  outline: none;
+  border-color: var(--teal);
+  background: var(--surface-soft);
+}
+
+.plan-name-input::placeholder {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.plan-row.purchased > .plan-row-head .plan-name-input {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.plan-book-select {
+  max-width: 280px;
+  min-width: 200px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.plan-book-select:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+
+.plan-subrows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 16px 16px 46px;
+}
+
+.plan-subrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease;
+}
+
+.plan-subrow.purchased {
+  border-color: rgba(61, 139, 95, 0.35);
+}
+
+.plan-subrow .plan-name-input {
+  font-weight: 400;
+  font-size: 14px;
+  min-width: 150px;
+}
+
+.plan-subrow.purchased .plan-name-input {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.plan-add-row {
+  align-self: center;
+  margin-top: 4px;
+}
+
 /* ===== Scrollbars ===== */
 
 ::-webkit-scrollbar {

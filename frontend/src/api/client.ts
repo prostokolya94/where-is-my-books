@@ -3,6 +3,11 @@ import type {
   BookStatus,
   Category,
   Genre,
+  PlanRow,
+  PlanRowPatch,
+  PlanSubrowMutationResult,
+  PlanSubrowPatch,
+  PlanYear,
   StatsResponse,
   Tab,
   TabFilters,
@@ -100,4 +105,38 @@ export const api = {
 
   getStats: (status?: BookStatus) =>
     request<StatsResponse>(`/api/stats${toQuery({ status: status ?? undefined })}`),
+
+  getPlans: () => request<PlanYear[]>('/api/plans'),
+  createPlanYear: (year: number) =>
+    request<PlanYear>('/api/plans/years', {
+      method: 'POST',
+      body: JSON.stringify({ year }),
+    }),
+  deletePlanYear: (id: number) =>
+    request<void>(`/api/plans/years/${id}`, { method: 'DELETE' }),
+
+  createPlanRow: (data: { yearId: number; name?: string; bookId?: number | null }) =>
+    request<PlanRow>('/api/plans/rows', { method: 'POST', body: JSON.stringify(data) }),
+  updatePlanRow: (id: number, data: PlanRowPatch) =>
+    request<PlanRow>(`/api/plans/rows/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deletePlanRow: (id: number) =>
+    request<void>(`/api/plans/rows/${id}`, { method: 'DELETE' }),
+
+  createPlanSubrow: (data: { rowId: number; name?: string; bookId?: number | null }) =>
+    request<PlanSubrowMutationResult>('/api/plans/subrows', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updatePlanSubrow: (id: number, data: PlanSubrowPatch) =>
+    request<PlanSubrowMutationResult>(`/api/plans/subrows/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deletePlanSubrow: (id: number) =>
+    request<PlanSubrowMutationResult>(`/api/plans/subrows/${id}`, {
+      method: 'DELETE',
+    }),
 };
