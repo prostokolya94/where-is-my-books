@@ -11,6 +11,7 @@ import type {
   StatsResponse,
   Tab,
   TabFilters,
+  UnreadOverview,
 } from './types';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -138,5 +139,12 @@ export const api = {
   deletePlanSubrow: (id: number) =>
     request<PlanSubrowMutationResult>(`/api/plans/subrows/${id}`, {
       method: 'DELETE',
+    }),
+
+  getUnreadOverview: () => request<UnreadOverview>('/api/unread'),
+  setUnreadCategoryTarget: (categoryId: number, target: number | null) =>
+    request<void>(`/api/unread/categories/${categoryId}/target`, {
+      method: 'PATCH',
+      body: JSON.stringify({ target }),
     }),
 };

@@ -41,6 +41,13 @@ const Sidebar = observer(() => {
             <span className="nav-icon">▦</span>
             <span>План покупок</span>
           </NavLink>
+          <NavLink
+            to="/unread"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+          >
+            <span className="nav-icon">▧</span>
+            <span>Мониторинг непрочитанного</span>
+          </NavLink>
         </nav>
       </div>
 
@@ -60,7 +67,7 @@ const Sidebar = observer(() => {
             </NavLink>
           ))}
           <button className="sidebar-add" onClick={() => uiStore.openNewTab()}>
-            <span className="sidebar-add-icon">+</span>
+            <span className="sidebar-add-icon" />
             <span>Новый таб</span>
           </button>
         </nav>

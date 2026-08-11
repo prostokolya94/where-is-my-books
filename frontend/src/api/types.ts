@@ -133,3 +133,33 @@ export interface PlanSubrowPatch {
   purchased?: boolean;
   bookId?: number | null;
 }
+
+export interface UnreadSeriesPoint {
+  year: number;
+  month: number;
+  total: number;
+  isCurrent: boolean;
+}
+
+export interface UnreadCategoryInfo {
+  categoryId: number | null;
+  name: string;
+  count: number;
+  target: number | null;
+}
+
+export interface UnreadGenreInfo {
+  genreId: number | null;
+  name: string;
+  categoryId: number | null;
+  categoryName: string;
+  count: number;
+}
+
+export interface UnreadOverview {
+  series: UnreadSeriesPoint[];
+  total: { current: number; previousMonth: number | null };
+  categories: UnreadCategoryInfo[];
+  genres: UnreadGenreInfo[];
+  generatedAt: string;
+}
