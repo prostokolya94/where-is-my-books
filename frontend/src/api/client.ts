@@ -1,6 +1,8 @@
 import type {
+  BackupInfo,
   Book,
   Category,
+  CreateBackupResult,
   Genre,
   PaginatedBooks,
   PlanRow,
@@ -148,5 +150,16 @@ export const api = {
     request<void>(`/api/unread/categories/${categoryId}/target`, {
       method: 'PATCH',
       body: JSON.stringify({ target }),
+    }),
+
+  getBackups: () => request<BackupInfo[]>('/api/backups'),
+  createBackup: () => request<CreateBackupResult>('/api/backups', { method: 'POST' }),
+  deleteBackup: (name: string) =>
+    request<BackupInfo[]>(`/api/backups/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+    }),
+  applyBackup: (name: string) =>
+    request<void>(`/api/backups/${encodeURIComponent(name)}/apply`, {
+      method: 'POST',
     }),
 };

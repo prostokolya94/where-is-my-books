@@ -165,3 +165,14 @@ export interface UnreadOverview {
   genres: UnreadGenreInfo[];
   generatedAt: string;
 }
+
+export interface BackupInfo {
+  name: string;
+  size: number;
+  createdAt: string;
+}
+
+export interface CreateBackupResult {
+  backups: BackupInfo[];
+  deleted: string | null;
+}

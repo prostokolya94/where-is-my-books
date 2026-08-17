@@ -4,6 +4,7 @@ import type { Tab } from '../api/types';
 class UIStore {
   tabEditorOpen = false;
   tabEditorTarget: Tab | null = null;
+  backupsOpen = false;
 
   constructor() {
     makeAutoObservable(this);
@@ -22,6 +23,14 @@ class UIStore {
   closeTabEditor(): void {
     this.tabEditorOpen = false;
     this.tabEditorTarget = null;
+  }
+
+  openBackups(): void {
+    this.backupsOpen = true;
+  }
+
+  closeBackups(): void {
+    this.backupsOpen = false;
   }
 }
 

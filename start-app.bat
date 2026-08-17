@@ -9,6 +9,18 @@ echo   Where Is My Books - запуск приложения
 echo ============================================
 echo.
 
+echo Обновляю приложение из репозитория (origin/main)...
+git fetch origin main
+if errorlevel 1 (
+    echo Не удалось получить данные из репозитория. Продолжаю с локальной версией.
+) else (
+    git pull --ff-only origin main
+    if errorlevel 1 (
+        echo Ошибка обновления. Продолжаю с локальной версией.
+    )
+)
+echo.
+
 if not exist "backend\node_modules" (
     echo Первый запуск: устанавливаю зависимости...
     call npm install

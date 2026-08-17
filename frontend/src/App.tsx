@@ -10,6 +10,8 @@ import StatsPage from './pages/StatsPage';
 import PlansPage from './pages/PlansPage';
 import UnreadMonitoringPage from './pages/UnreadMonitoringPage';
 import TabEditorModal from './components/TabEditorModal';
+import BackupsModal from './components/BackupsModal';
+import { uiStore } from './stores/uiStore';
 
 const App = observer(() => {
   useEffect(() => {
@@ -30,6 +32,7 @@ const App = observer(() => {
         </Routes>
       </main>
       <TabEditorModal />
+      {uiStore.backupsOpen && <BackupsModal />}
     </div>
   );
 });

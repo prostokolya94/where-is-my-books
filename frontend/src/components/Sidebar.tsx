@@ -86,7 +86,16 @@ const Sidebar = observer(() => {
         </nav>
       </div>
 
-      <div className="sidebar-footer">Where Is My Books · v1.0</div>
+      <div className="sidebar-footer">
+        <button
+          className="sidebar-footer-btn"
+          onClick={() => uiStore.openBackups()}
+        >
+          <span className="sidebar-footer-btn-icon">🗄</span>
+          <span>Менеджмент версий</span>
+        </button>
+        <div style={{ marginTop: 8 }}>Where Is My Books · v1.0</div>
+      </div>
     </aside>
   );
 });
