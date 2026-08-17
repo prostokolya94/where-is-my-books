@@ -43,7 +43,11 @@ export class BooksService {
     private readonly planSubrows: Repository<PurchasePlanSubrow>,
   ) {}
 
-  async findAll(query: BookQuery): Promise<Book[]> {
+  async findAll(
+    query: BookQuery,
+    offset = 0,
+    limit = 30,
+  ): Promise<{ items: Book[]; total: number }> {
     const qb = this.repo
       .createQueryBuilder('book')
       .leftJoinAndSelect('book.category', 'category')
@@ -65,14 +69,30 @@ export class BooksService {
       qb.andWhere('book.status IN (:...statuses)', { statuses });
     }
 
-    if (query.search && query.search.trim()) {
-      const term = query.search.trim();
-      qb.andWhere('(book.title LIKE :term OR book.author LIKE :term)', {
-        term: `%${term}%`,
-      });
+    const rows = await qb.getMany();
+
+    let items = rows;
+    const search = query.search?.trim();
+    if (search) {
+      const term = search.toLowerCase();
+      items = rows.filter(
+        (book) =>
+          book.title.toLowerCase().includes(term) ||
+          book.author.toLowerCase().includes(term),
+      );
     }
 
-    return qb.getMany();
+    return {
+      items: items.slice(offset, offset + limit),
+      total: items.length,
+    };
+  }
+
+  async findAllRaw(): Promise<Book[]> {
+    return this.repo.find({
+      relations: { category: true, genre: true },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findOne(id: number): Promise<Book> {

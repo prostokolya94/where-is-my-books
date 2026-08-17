@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { rootStore } from '../stores/rootStore';
+import { api } from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
 import type { Category, Genre } from '../api/types';
 
@@ -293,14 +294,27 @@ const CategoryCard = observer(
 );
 
 const CategoriesPage = observer(() => {
-  const { catalog, books } = rootStore;
+  const { catalog } = rootStore;
   const [newCategory, setNewCategory] = useState('');
   const [dragCat, setDragCat] = useState<number | null>(null);
   const [overCat, setOverCat] = useState<number | null>(null);
+  const [genreCounts, setGenreCounts] = useState<Map<number, number>>(new Map());
 
   useEffect(() => {
-    books.resetFilters();
-    books.load();
+    api
+      .getAllBooks()
+      .then((all) => {
+        const map = new Map<number, number>();
+        for (const book of all) {
+          if (book.genreId != null) {
+            map.set(book.genreId, (map.get(book.genreId) ?? 0) + 1);
+          }
+        }
+        setGenreCounts(map);
+      })
+      .catch(() => {
+        setGenreCounts(new Map());
+      });
   }, []);
 
   const handleCatDrop = (overId: number) => {
@@ -311,13 +325,7 @@ const CategoriesPage = observer(() => {
     setOverCat(null);
   };
 
-  const countsByGenre = new Map<number, number>();
-  for (const book of books.books) {
-    if (book.genreId != null) {
-      countsByGenre.set(book.genreId, (countsByGenre.get(book.genreId) ?? 0) + 1);
-    }
-  }
-  const counts = (gid: number) => countsByGenre.get(gid) ?? 0;
+  const counts = (gid: number) => genreCounts.get(gid) ?? 0;
 
   const addCategory = async () => {
     if (!newCategory.trim()) return;

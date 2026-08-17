@@ -3,26 +3,24 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Book } from '../books/book.entity';
 import { BookStatus } from '../common/book-status.enum';
+import { Category } from '../categories/category.entity';
 
-export interface StatsCategoryColumn {
-  id: number | null;
-  name: string;
-  total: number;
-}
-
-export interface StatsGenreRow {
+export interface StatsGenreCount {
   genreId: number | null;
   genreName: string;
-  genreCategoryId: number | null;
+  count: number;
+}
+
+export interface StatsCategoryTable {
+  categoryId: number | null;
+  categoryName: string;
+  genres: StatsGenreCount[];
   total: number;
-  byCategory: Record<string, number>;
 }
 
 export interface StatsResponse {
-  columns: StatsCategoryColumn[];
-  rows: StatsGenreRow[];
+  tables: StatsCategoryTable[];
   total: number;
-  status: BookStatus | null;
   statusTotals: Record<BookStatus, number>;
 }
 
@@ -31,95 +29,88 @@ export class StatsService {
   constructor(
     @InjectRepository(Book)
     private readonly bookRepo: Repository<Book>,
+    @InjectRepository(Category)
+    private readonly categoryRepo: Repository<Category>,
   ) {}
 
-  async getStats(status?: string): Promise<StatsResponse> {
-    let statusFilter: BookStatus | null = null;
-    if (status && (Object.values(BookStatus) as string[]).includes(status)) {
-      statusFilter = status as BookStatus;
-    }
-
-    const qb = this.bookRepo
-      .createQueryBuilder('book')
-      .leftJoinAndSelect('book.category', 'category')
-      .leftJoinAndSelect('book.genre', 'genre');
-
-    const allBooks = await this.bookRepo.find();
-
+  async getStats(): Promise<StatsResponse> {
     const statusTotals: Record<BookStatus, number> = {
       [BookStatus.READ]: 0,
       [BookStatus.BOUGHT]: 0,
       [BookStatus.WISHLIST]: 0,
       [BookStatus.ABANDONED]: 0,
     };
+    const allBooks = await this.bookRepo.find();
     for (const book of allBooks) {
       statusTotals[book.status] += 1;
     }
 
-    if (statusFilter) {
-      qb.where('book.status = :status', { status: statusFilter });
-    }
-
-    const books = await qb.getMany();
-
+    const categories = await this.categoryRepo.find({
+      order: { sortOrder: 'ASC', id: 'ASC' },
+    });
     const categoryNames = new Map<number, string>();
-    const genreNames = new Map<number, string>();
-    const genreCategories = new Map<number, number | null>();
-    const categoryIds = new Set<number>();
+    const orderIndex = new Map<number, number>();
+    categories.forEach((c, index) => {
+      categoryNames.set(c.id, c.name);
+      orderIndex.set(c.id, index);
+    });
+
+    const books = await this.bookRepo
+      .createQueryBuilder('book')
+      .leftJoinAndSelect('book.category', 'category')
+      .leftJoinAndSelect('book.genre', 'genre')
+      .where('book.status != :wishlist', { wishlist: BookStatus.WISHLIST })
+      .getMany();
+
+    const tables = new Map<number | null, StatsCategoryTable>();
+    const genreAggs = new Map<number | null, Map<number, StatsGenreCount>>();
 
     for (const book of books) {
-      if (book.category) {
-        categoryNames.set(book.category.id, book.category.name);
-        categoryIds.add(book.category.id);
-      }
-      if (book.genre) {
-        genreNames.set(book.genre.id, book.genre.name);
-        genreCategories.set(book.genre.id, book.genre.categoryId);
-      }
-    }
+      const tableKey = book.genre ? book.genre.categoryId : book.categoryId;
+      const genreId = book.genreId ?? 0;
+      const genreName = book.genre ? book.genre.name : 'Без жанра';
 
-    const columns: StatsCategoryColumn[] = Array.from(categoryIds)
-      .sort((a, b) => a - b)
-      .map((id) => ({
-        id,
-        name: categoryNames.get(id) ?? 'Без категории',
-        total: 0,
-      }));
-    columns.push({ id: null, name: 'Без категории', total: 0 });
-
-    const rowsMap = new Map<number, StatsGenreRow>();
-
-    for (const book of books) {
-      const colId = book.categoryId ?? null;
-      const col = columns.find((c) => c.id === colId);
-      if (col) col.total += 1;
-
-      const rowKey = book.genreId ?? 0;
-      let row = rowsMap.get(rowKey);
-      if (!row) {
-        row = {
-          genreId: book.genreId,
-          genreName: book.genre ? book.genre.name : 'Без жанра',
-          genreCategoryId: book.genre ? book.genre.categoryId : null,
+      let table = tables.get(tableKey);
+      let aggs = genreAggs.get(tableKey);
+      if (!table) {
+        table = {
+          categoryId: tableKey,
+          categoryName: categoryNames.get(tableKey) ?? 'Без категории',
+          genres: [],
           total: 0,
-          byCategory: {},
         };
-        rowsMap.set(rowKey, row);
+        tables.set(tableKey, table);
+        aggs = new Map();
+        genreAggs.set(tableKey, aggs);
       }
-      row.total += 1;
-      const key = String(colId ?? '');
-      row.byCategory[key] = (row.byCategory[key] ?? 0) + 1;
+      table.total += 1;
+
+      let genre = aggs.get(genreId);
+      if (!genre) {
+        genre = { genreId: book.genreId, genreName, count: 0 };
+        aggs.set(genreId, genre);
+      }
+      genre.count += 1;
     }
 
-    const rows = Array.from(rowsMap.values()).sort((a, b) =>
-      a.genreName.localeCompare(b.genreName, 'ru'),
-    );
+    const orderedTables = Array.from(tables.entries())
+      .sort(([a], [b]) => {
+        const ai =
+          a === null ? Number.MAX_SAFE_INTEGER : orderIndex.get(a) ?? categories.length + a;
+        const bi =
+          b === null ? Number.MAX_SAFE_INTEGER : orderIndex.get(b) ?? categories.length + b;
+        return ai - bi;
+      })
+      .map(([key, table]) => {
+        table.genres = Array.from(genreAggs.get(key)?.values() ?? []).sort((x, y) =>
+          x.genreName.localeCompare(y.genreName, 'ru'),
+        );
+        return table;
+      });
 
     return {
-      columns,
-      rows,
+      tables: orderedTables,
       total: books.length,
-      status: statusFilter,
       statusTotals,
     };
   }

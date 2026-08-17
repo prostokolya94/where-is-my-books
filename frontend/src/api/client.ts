@@ -1,8 +1,8 @@
 import type {
   Book,
-  BookStatus,
   Category,
   Genre,
+  PaginatedBooks,
   PlanRow,
   PlanRowPatch,
   PlanSubrowMutationResult,
@@ -82,15 +82,18 @@ export const api = {
   deleteGenre: (id: number) =>
     request<void>(`/api/genres/${id}`, { method: 'DELETE' }),
 
-  getBooks: (filters?: TabFilters) => {
+  getBooks: (filters?: TabFilters, pagination?: { offset: number; limit: number }) => {
     const query = toQuery({
       categories: filters?.categories?.length ? filters.categories.join(',') : undefined,
       genres: filters?.genres?.length ? filters.genres.join(',') : undefined,
       statuses: filters?.statuses?.length ? filters.statuses.join(',') : undefined,
       search: filters?.search?.trim() || undefined,
+      offset: pagination ? String(pagination.offset) : undefined,
+      limit: pagination ? String(pagination.limit) : undefined,
     });
-    return request<Book[]>(`/api/books${query}`);
+    return request<PaginatedBooks>(`/api/books${query}`);
   },
+  getAllBooks: () => request<Book[]>('/api/books/all'),
   createBook: (data: Partial<Book>) =>
     request<Book>('/api/books', { method: 'POST', body: JSON.stringify(data) }),
   updateBook: (id: number, data: Partial<Book>) =>
@@ -104,8 +107,7 @@ export const api = {
     request<Tab>(`/api/tabs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteTab: (id: number) => request<void>(`/api/tabs/${id}`, { method: 'DELETE' }),
 
-  getStats: (status?: BookStatus) =>
-    request<StatsResponse>(`/api/stats${toQuery({ status: status ?? undefined })}`),
+  getStats: () => request<StatsResponse>('/api/stats'),
 
   getPlans: () => request<PlanYear[]>('/api/plans'),
   createPlanYear: (year: number) =>

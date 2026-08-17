@@ -31,7 +31,7 @@ export class PlanStore {
     this.loading = true;
     this.error = null;
     try {
-      const [years, books] = await Promise.all([api.getPlans(), api.getBooks()]);
+      const [years, books] = await Promise.all([api.getPlans(), api.getAllBooks()]);
       runInAction(() => {
         this.years = years;
         this.books = books;

@@ -21,9 +21,18 @@ export class BooksController {
     @Query('genres') genres?: string,
     @Query('statuses') statuses?: string,
     @Query('search') search?: string,
+    @Query('offset') offset?: string,
+    @Query('limit') limit?: string,
   ) {
     const query: BookQuery = { categories, genres, statuses, search };
-    return this.service.findAll(query);
+    const off = Math.max(0, parseInt(offset ?? '0', 10) || 0);
+    const lim = Math.min(200, Math.max(1, parseInt(limit ?? '30', 10) || 30));
+    return this.service.findAll(query, off, lim);
+  }
+
+  @Get('all')
+  findAllRaw() {
+    return this.service.findAllRaw();
   }
 
   @Post()

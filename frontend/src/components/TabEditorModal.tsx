@@ -43,8 +43,8 @@ const TabEditorModal = observer(() => {
     group: g.categoryId !== null ? (catalog.categoryById.get(g.categoryId)?.name ?? 'Без категории') : 'Без категории',
   }));
 
-  const statusOptions = BOOK_STATUSES.map((s) => ({
-    value: s as unknown as number,
+  const statusOptions = BOOK_STATUSES.map((s, i) => ({
+    value: i,
     label: BOOK_STATUS_LABELS[s],
   }));
 
@@ -79,7 +79,8 @@ const TabEditorModal = observer(() => {
     <Modal
       title={editing ? 'Редактировать таб' : 'Новый таб'}
       onClose={() => uiStore.closeTabEditor()}
-      width={560}
+      width={780}
+      className="modal-tall"
       footer={
         <>
           <button

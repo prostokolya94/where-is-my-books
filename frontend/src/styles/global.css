@@ -520,8 +520,9 @@ textarea {
   top: calc(100% + 6px);
   left: 0;
   min-width: 240px;
-  max-height: 320px;
+  max-height: min(320px, 40vh);
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -628,6 +629,78 @@ textarea {
 
 .books-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pager-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.pager-btn:hover:not(:disabled):not(.is-active) {
+  background: var(--surface-soft);
+  border-color: var(--clay-soft);
+}
+
+.pager-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pager-btn.is-active {
+  background: var(--pine);
+  border-color: var(--pine);
+  color: #fffdf9;
+  cursor: default;
+}
+
+.pager-dots {
+  padding: 0 4px;
+  color: var(--muted);
+}
+
+.pagination-limit {
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .cell-title {
@@ -757,7 +830,8 @@ textarea {
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: 20px;
+  padding: 12px;
+  overscroll-behavior: contain;
 }
 
 .modal {
@@ -766,9 +840,16 @@ textarea {
   box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 560px;
-  max-height: calc(100vh - 60px);
-  overflow-y: auto;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   animation: modal-in 0.18s ease;
+}
+
+.modal-tall {
+  min-height: min(600px, calc(100dvh - 24px));
 }
 
 @keyframes modal-in {
@@ -809,7 +890,11 @@ textarea {
 }
 
 .modal-body {
-  padding: 18px 24px;
+  padding: 16px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  flex: 1;
+  min-height: 0;
 }
 
 .modal-footer {
@@ -1121,6 +1206,82 @@ textarea {
 
 .stats-table tbody tr:hover {
   background: #fbf7ef;
+}
+
+.stats-grand {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--pine) 0%, var(--pine-dark) 100%);
+  color: #fffdf9;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+
+.stats-grand-value {
+  font-family: var(--font-serif);
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.stats-grand-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #efe9dc;
+  opacity: 0.9;
+}
+
+.stats-categories {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.stats-category {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+}
+
+.stats-category-title {
+  font-size: 18px;
+  color: var(--pine);
+  margin-bottom: 12px;
+}
+
+.stats-category .stats-table {
+  min-width: 0;
+  width: 100%;
+}
+
+.stats-category .stats-table td:first-child {
+  width: 100%;
+}
+
+.genre-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--pine);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  transition: color 0.12s ease;
+}
+
+.genre-link:hover {
+  color: var(--clay);
+  text-decoration-style: solid;
 }
 
 /* ===== Plans page ===== */

@@ -41,6 +41,11 @@ export interface Book {
   genre?: Genre | null;
 }
 
+export interface PaginatedBooks {
+  items: Book[];
+  total: number;
+}
+
 export interface TabFilters {
   categories: number[];
   genres: number[];
@@ -62,25 +67,22 @@ export interface Tab {
   filters: TabFilters;
 }
 
-export interface StatsColumn {
-  id: number | null;
-  name: string;
-  total: number;
-}
-
-export interface StatsRow {
+export interface StatsGenreCount {
   genreId: number | null;
   genreName: string;
-  genreCategoryId: number | null;
+  count: number;
+}
+
+export interface StatsCategoryTable {
+  categoryId: number | null;
+  categoryName: string;
+  genres: StatsGenreCount[];
   total: number;
-  byCategory: Record<string, number>;
 }
 
 export interface StatsResponse {
-  columns: StatsColumn[];
-  rows: StatsRow[];
+  tables: StatsCategoryTable[];
   total: number;
-  status: BookStatus | null;
   statusTotals: Record<BookStatus, number>;
 }
 

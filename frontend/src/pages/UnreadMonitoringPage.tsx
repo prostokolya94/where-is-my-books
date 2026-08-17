@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
+import { useNavigate } from 'react-router-dom';
 import { rootStore } from '../stores/rootStore';
 import type { UnreadSeriesPoint } from '../api/types';
 
@@ -147,6 +148,7 @@ function TargetInput({
 
 const UnreadMonitoringPage = observer(() => {
   const { unread } = rootStore;
+  const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -319,7 +321,20 @@ const UnreadMonitoringPage = observer(() => {
                         key={g.genreId !== null ? `${g.categoryId}-${g.genreId}` : `nog-${g.categoryId}-${i}`}
                       >
                         <td className="cell-muted">{g.categoryName}</td>
-                        <td className={g.count > 10 ? 'unread-over' : ''}>{g.name}</td>
+                        <td className={g.count > 10 ? 'unread-over' : ''}>
+                          {g.genreId != null ? (
+                            <button
+                              type="button"
+                              className="genre-link"
+                              onClick={() => navigate(`/?genre=${g.genreId}`)}
+                              title={`Показать книги жанра «${g.name}»`}
+                            >
+                              {g.name}
+                            </button>
+                          ) : (
+                            g.name
+                          )}
+                        </td>
                         <td className={`unread-num ${g.count > 10 ? 'unread-over' : ''}`}>
                           {g.count}
                         </td>
