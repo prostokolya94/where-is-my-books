@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import Modal from './Modal';
 import { rootStore } from '../stores/rootStore';
+import { api } from '../api/client';
 import {
   BOOK_STATUS_LABELS,
   BOOK_STATUSES,
@@ -29,6 +30,30 @@ const BookFormModal = observer(({ book, onClose }: Props) => {
   const [form, setForm] = useState({ ...emptyForm });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [allAuthors, setAllAuthors] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    api.getAuthors().then(setAllAuthors).catch(() => setAllAuthors([]));
+  }, []);
+
+  const filteredAuthors = useMemo(() => {
+    const q = form.author.trim().toLowerCase();
+    if (!q) return [];
+    return allAuthors.filter((a) => a.toLowerCase().includes(q));
+  }, [allAuthors, form.author]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (book) {
@@ -124,13 +149,38 @@ const BookFormModal = observer(({ book, onClose }: Props) => {
             autoFocus
           />
         </div>
-        <div className="form-field full">
+        <div className="form-field full" ref={wrapperRef} style={{ position: 'relative' }}>
           <label>Автор</label>
           <input
             value={form.author}
-            onChange={(e) => set('author', e.target.value)}
+            onChange={(e) => {
+              set('author', e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => {
+              if (form.author.trim()) {
+                setShowSuggestions(true);
+              }
+            }}
             placeholder="Автор"
+            autoComplete="off"
           />
+          {showSuggestions && filteredAuthors.length > 0 && (
+            <div className="author-suggestions">
+              {filteredAuthors.map((name) => (
+                <div
+                  key={name}
+                  className="author-suggestion-item"
+                  onMouseDown={() => {
+                    set('author', name);
+                    setShowSuggestions(false);
+                  }}
+                >
+                  {name}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="form-field">
           <label>Статус</label>

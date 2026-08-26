@@ -30,6 +30,11 @@ export class BooksController {
     return this.service.findAll(query, off, lim);
   }
 
+  @Get('authors')
+  findAuthors() {
+    return this.service.findAuthors();
+  }
+
   @Get('all')
   findAllRaw() {
     return this.service.findAllRaw();

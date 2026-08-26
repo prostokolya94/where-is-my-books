@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useNavigate } from 'react-router-dom';
 import { rootStore } from '../stores/rootStore';
-import type { UnreadSeriesPoint } from '../api/types';
+import type { UnreadSeriesPoint, UnreadYearInfo } from '../api/types';
 
 const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 
@@ -103,6 +103,91 @@ function UnreadChart({ series }: { series: UnreadSeriesPoint[] }) {
   );
 }
 
+function YearBreakdownChart({ data }: { data: UnreadYearInfo[] }) {
+  const H = 220;
+  const top = 22;
+  const bottom = 30;
+  const left = 38;
+  const right = 10;
+  const barW = 36;
+
+  if (data.length === 0) {
+    return <div className="loading-bar">Нет данных</div>;
+  }
+
+  const maxVal = Math.max(...data.map((d) => d.count), 1);
+  const step = niceStep(maxVal);
+  const maxAxis = Math.ceil(maxVal / step) * step;
+  const plotH = H - top - bottom;
+  const slotW = Math.max(barW + 16, 56);
+  const W = data.length * slotW + left + right;
+
+  const yFor = (v: number) => top + plotH - (v / maxAxis) * plotH;
+
+  const gridlines: number[] = [];
+  for (let v = 0; v <= maxAxis; v += step) gridlines.push(v);
+
+  return (
+    <div className="unread-chart-scroll">
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="unread-chart">
+        {gridlines.map((v) => (
+          <g key={v}>
+            <line
+              x1={left}
+              y1={yFor(v)}
+              x2={W - right}
+              y2={yFor(v)}
+              stroke="#ece4d6"
+              strokeWidth={1}
+            />
+            <text x={left - 8} y={yFor(v) + 4} textAnchor="end" fontSize={11} fill="#948b7c">
+              {v}
+            </text>
+          </g>
+        ))}
+        {data.map((d) => {
+          const i = data.indexOf(d);
+          const cx = left + i * slotW + slotW / 2;
+          const barHeight = Math.max((d.count / maxAxis) * plotH, d.count > 0 ? 2 : 1);
+          const y = yFor(d.count);
+          const label = d.year !== null ? String(d.year) : 'нет';
+          return (
+            <g key={label}>
+              <rect
+                x={cx - barW / 2}
+                y={y}
+                width={barW}
+                height={barHeight}
+                rx={4}
+                fill="var(--clay)"
+              />
+              <text
+                x={cx}
+                y={y - 7}
+                textAnchor="middle"
+                fontSize={12}
+                fontWeight={600}
+                fill="var(--pine)"
+              >
+                {d.count}
+              </text>
+              <text
+                x={cx}
+                y={H - 9}
+                textAnchor="middle"
+                fontSize={11}
+                fill="#948b7c"
+              >
+                {label}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 function TargetInput({
   value,
   disabled,
@@ -161,11 +246,11 @@ const UnreadMonitoringPage = observer(() => {
       ? data.total.current - data.total.previousMonth
       : null;
 
-  const commitTarget = async (categoryId: number, target: number | null) => {
-    if (categoryId == null) return;
+  const commitGenreTarget = async (genreId: number, target: number | null) => {
+    if (genreId == null) return;
     setBusy(true);
     try {
-      await unread.setTarget(categoryId, target);
+      await unread.setGenreTarget(genreId, target);
     } catch {
       await unread.load();
     } finally {
@@ -238,65 +323,15 @@ const UnreadMonitoringPage = observer(() => {
 
           <div className="unread-card">
             <div className="unread-card-head">
-              <h3 className="unread-card-title">Целевые значения по категориям</h3>
-              <span className="unread-hint">Остаток сравнивается с целью, если она задана</span>
+              <h3 className="unread-card-title">Остатки по году покупки</h3>
             </div>
-            {data.categories.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-text">Категорий пока нет.</div>
-              </div>
-            ) : (
-              <div className="unread-table-wrap">
-                <table className="unread-table">
-                  <thead>
-                    <tr>
-                      <th>Категория</th>
-                      <th style={{ textAlign: 'center' }}>Остаток</th>
-                      <th style={{ textAlign: 'center' }}>Цель</th>
-                      <th style={{ textAlign: 'right' }}>Состояние</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.categories.map((c) => (
-                      <tr key={c.categoryId ?? '__none'}>
-                        <td className="unread-cat-name">{c.name}</td>
-                        <td className="unread-num">{c.count}</td>
-                        <td className="unread-num">
-                          {c.categoryId != null ? (
-                            <TargetInput
-                              value={c.target}
-                              disabled={busy}
-                              onCommit={(t) => void commitTarget(c.categoryId as number, t)}
-                            />
-                          ) : (
-                            <span className="cell-muted">—</span>
-                          )}
-                        </td>
-                        <td style={{ textAlign: 'right' }}>
-                          {c.categoryId == null ? (
-                            <span className="cell-muted">—</span>
-                          ) : c.target === null ? (
-                            <span className="badge badge-none">цель не задана</span>
-                          ) : c.count > c.target ? (
-                            <span className="badge badge-abandoned">
-                              превышено на {c.count - c.target}
-                            </span>
-                          ) : (
-                            <span className="badge badge-read">в пределах цели</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <YearBreakdownChart data={data.yearBreakdown} />
           </div>
 
           <div className="unread-card">
             <div className="unread-card-head">
               <h3 className="unread-card-title">Остатки по жанрам</h3>
-              <span className="unread-hint">Красным выделены жанры с остатком больше 10</span>
+              <span className="unread-hint">Цель задаётся для жанра; сравнение — с остатком</span>
             </div>
             {data.genres.length === 0 ? (
               <div className="empty-state">
@@ -313,10 +348,12 @@ const UnreadMonitoringPage = observer(() => {
                       <th>Категория</th>
                       <th>Жанр</th>
                       <th style={{ textAlign: 'right' }}>Остаток</th>
+                      <th style={{ textAlign: 'center' }}>Цель</th>
+                      <th style={{ textAlign: 'right' }}>Состояние</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data.genres.map((g, i) => (
+                    {[...data.genres].sort((a, b) => b.count - a.count).map((g, i) => (
                       <tr
                         key={g.genreId !== null ? `${g.categoryId}-${g.genreId}` : `nog-${g.categoryId}-${i}`}
                       >
@@ -338,6 +375,30 @@ const UnreadMonitoringPage = observer(() => {
                         <td className={`unread-num ${g.count > 10 ? 'unread-over' : ''}`}>
                           {g.count}
                         </td>
+                        <td className="unread-num">
+                          {g.genreId != null ? (
+                            <TargetInput
+                              value={g.target}
+                              disabled={busy}
+                              onCommit={(t) => void commitGenreTarget(g.genreId as number, t)}
+                            />
+                          ) : (
+                            <span className="cell-muted">—</span>
+                          )}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          {g.genreId == null ? (
+                            <span className="cell-muted">—</span>
+                          ) : g.target === null ? (
+                            <span className="badge badge-none">цель не задана</span>
+                          ) : g.count > g.target ? (
+                            <span className="badge badge-abandoned">
+                              превышено на {g.count - g.target}
+                            </span>
+                          ) : (
+                            <span className="badge badge-read">в пределах цели</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -347,6 +408,8 @@ const UnreadMonitoringPage = observer(() => {
                         Итого непрочитано
                       </td>
                       <td className="unread-num">{data.total.current}</td>
+                      <td></td>
+                      <td></td>
                     </tr>
                   </tfoot>
                 </table>

@@ -6,7 +6,7 @@ import { BookStatus } from '../common/book-status.enum';
 import { Category } from '../categories/category.entity';
 import { Genre } from '../genres/genre.entity';
 import { UnreadSnapshot } from './unread-snapshot.entity';
-import { UnreadCategoryTarget } from './unread-category-target.entity';
+import { UnreadGenreTarget } from './unread-genre-target.entity';
 
 const UNREAD_STATUS = BookStatus.BOUGHT;
 
@@ -21,7 +21,6 @@ export interface UnreadCategoryInfo {
   categoryId: number | null;
   name: string;
   count: number;
-  target: number | null;
 }
 
 export interface UnreadGenreInfo {
@@ -30,6 +29,12 @@ export interface UnreadGenreInfo {
   categoryId: number | null;
   categoryName: string;
   count: number;
+  target: number | null;
+}
+
+export interface UnreadYearInfo {
+  year: number | null;
+  count: number;
 }
 
 export interface UnreadOverview {
@@ -37,6 +42,7 @@ export interface UnreadOverview {
   total: { current: number; previousMonth: number | null };
   categories: UnreadCategoryInfo[];
   genres: UnreadGenreInfo[];
+  yearBreakdown: UnreadYearInfo[];
   generatedAt: string;
 }
 
@@ -51,8 +57,8 @@ export class UnreadService {
     private readonly genreRepo: Repository<Genre>,
     @InjectRepository(UnreadSnapshot)
     private readonly snapshotRepo: Repository<UnreadSnapshot>,
-    @InjectRepository(UnreadCategoryTarget)
-    private readonly targetRepo: Repository<UnreadCategoryTarget>,
+    @InjectRepository(UnreadGenreTarget)
+    private readonly targetRepo: Repository<UnreadGenreTarget>,
   ) {}
 
   async getOverview(): Promise<UnreadOverview> {
@@ -86,22 +92,20 @@ export class UnreadService {
       }
     }
 
-    const targetMap = new Map(targets.map((t) => [t.categoryId, t.target]));
-
     const categoriesInfo: UnreadCategoryInfo[] = [
       {
         categoryId: null,
         name: 'Без категории',
         count: catCounts.get(null) ?? 0,
-        target: null,
       },
       ...categories.map((c) => ({
         categoryId: c.id,
         name: c.name,
         count: catCounts.get(c.id) ?? 0,
-        target: targetMap.get(c.id) ?? null,
       })),
     ];
+
+    const targetMap = new Map(targets.map((t) => [t.genreId, t.target]));
 
     const genresInfo: UnreadGenreInfo[] = [];
     for (const g of genres) {
@@ -116,6 +120,7 @@ export class UnreadService {
             ? (g.category?.name ?? 'Без категории')
             : 'Без категории',
         count,
+        target: targetMap.get(g.id) ?? null,
       });
     }
     for (const [cat, count] of noGenreByCategory) {
@@ -126,6 +131,7 @@ export class UnreadService {
         categoryName:
           cat != null ? (categoryNames.get(cat) ?? 'Без категории') : 'Без категории',
         count,
+        target: null,
       });
     }
     genresInfo.sort(
@@ -133,6 +139,19 @@ export class UnreadService {
         a.categoryName.localeCompare(b.categoryName, 'ru') ||
         a.name.localeCompare(b.name, 'ru'),
     );
+
+    const yearCounts = new Map<number | null, number>();
+    for (const book of unreadBooks) {
+      const y = book.purchaseYear ?? null;
+      yearCounts.set(y, (yearCounts.get(y) ?? 0) + 1);
+    }
+    const yearBreakdown: UnreadYearInfo[] = Array.from(yearCounts.entries())
+      .map(([year, count]) => ({ year, count }))
+      .sort((a, b) => {
+        if (a.year === null) return 1;
+        if (b.year === null) return -1;
+        return a.year - b.year;
+      });
 
     const snapshots = await this.snapshotRepo.find({
       order: { year: 'ASC', month: 'ASC' },
@@ -167,16 +186,17 @@ export class UnreadService {
       },
       categories: categoriesInfo,
       genres: genresInfo,
+      yearBreakdown,
       generatedAt: now.toISOString(),
     };
   }
 
-  async setTarget(categoryId: number, target: number | null): Promise<void> {
-    const category = await this.categoryRepo.findOneBy({ id: categoryId });
-    if (!category) {
-      throw new NotFoundException('Категория не найдена');
+  async setGenreTarget(genreId: number, target: number | null): Promise<void> {
+    const genre = await this.genreRepo.findOneBy({ id: genreId });
+    if (!genre) {
+      throw new NotFoundException('Жанр не найден');
     }
-    const existing = await this.targetRepo.findOneBy({ categoryId });
+    const existing = await this.targetRepo.findOneBy({ genreId });
     if (target == null) {
       if (existing) {
         await this.targetRepo.delete(existing.id);
@@ -188,7 +208,7 @@ export class UnreadService {
       await this.targetRepo.save(existing);
     } else {
       await this.targetRepo.save(
-        this.targetRepo.create({ categoryId, target }),
+        this.targetRepo.create({ genreId, target }),
       );
     }
   }

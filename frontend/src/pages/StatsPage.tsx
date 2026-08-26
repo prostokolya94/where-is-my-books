@@ -82,7 +82,7 @@ const StatsPage = observer(() => {
               <h2 className="stats-category-title">{table.categoryName}</h2>
               <table className="stats-table stats-table-vertical">
                 <tbody>
-                  {table.genres.map((genre) => (
+                  {[...table.genres].sort((a, b) => b.count - a.count).map((genre) => (
                     <tr key={genre.genreId ?? '__nog'}>
                       <td className="row-label">
                         {genre.genreId != null ? (

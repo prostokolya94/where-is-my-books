@@ -88,6 +88,17 @@ export class BooksService {
     };
   }
 
+  async findAuthors(): Promise<string[]> {
+    const rows = await this.repo
+      .createQueryBuilder('book')
+      .select('DISTINCT book.author')
+      .where("book.author != ''")
+      .andWhere("book.author IS NOT NULL")
+      .orderBy('book.author', 'ASC')
+      .getRawMany<{ author: string }>();
+    return rows.map((r) => r.author);
+  }
+
   async findAllRaw(): Promise<Book[]> {
     return this.repo.find({
       relations: { category: true, genre: true },
@@ -112,14 +123,14 @@ export class BooksService {
   }
 
   async update(id: number, dto: UpdateBookDto): Promise<Book> {
-    const book = await this.findOne(id);
-    const statusChanged = dto.status !== undefined && dto.status !== book.status;
-    Object.assign(book, dto);
-    const saved = await this.repo.save(book);
+    const existing = await this.repo.findOneBy({ id });
+    if (!existing) throw new NotFoundException('Книга не найдена');
+    const statusChanged = dto.status !== undefined && dto.status !== existing.status;
+    await this.repo.update(id, dto);
     if (statusChanged) {
-      await this.syncPlanFlags(saved.id, saved.status);
+      await this.syncPlanFlags(id, dto.status!);
     }
-    return saved;
+    return this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {

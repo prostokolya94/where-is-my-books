@@ -95,6 +95,7 @@ export const api = {
     });
     return request<PaginatedBooks>(`/api/books${query}`);
   },
+  getAuthors: () => request<string[]>('/api/books/authors'),
   getAllBooks: () => request<Book[]>('/api/books/all'),
   createBook: (data: Partial<Book>) =>
     request<Book>('/api/books', { method: 'POST', body: JSON.stringify(data) }),
@@ -146,8 +147,8 @@ export const api = {
     }),
 
   getUnreadOverview: () => request<UnreadOverview>('/api/unread'),
-  setUnreadCategoryTarget: (categoryId: number, target: number | null) =>
-    request<void>(`/api/unread/categories/${categoryId}/target`, {
+  setUnreadGenreTarget: (genreId: number, target: number | null) =>
+    request<void>(`/api/unread/genres/${genreId}/target`, {
       method: 'PATCH',
       body: JSON.stringify({ target }),
     }),

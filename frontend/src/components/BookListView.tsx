@@ -108,7 +108,7 @@ const BookListView = observer(
                 Сохранить пресет
               </button>
             )}
-            <button className="btn btn-accent" onClick={() => setModalOpen(true)}>
+            <button className="btn btn-accent" onClick={() => { setModalBook(null); setModalOpen(true); }}>
               + Добавить книгу
             </button>
           </div>
@@ -169,7 +169,7 @@ const BookListView = observer(
                   : 'Добавьте первую книгу, чтобы начать вести каталог.'}
               </p>
               {!hasFilters && (
-                <button className="btn btn-accent" onClick={() => setModalOpen(true)}>
+                <button className="btn btn-accent" onClick={() => { setModalBook(null); setModalOpen(true); }}>
                   + Добавить книгу
                 </button>
               )}
@@ -302,7 +302,7 @@ const BookListView = observer(
         </div>
 
         {modalOpen && (
-          <BookFormModal book={modalBook} onClose={() => setModalOpen(false)} />
+          <BookFormModal book={modalBook} onClose={() => { setModalBook(null); setModalOpen(false); }} />
         )}
         {deleteTarget && (
           <ConfirmDialog

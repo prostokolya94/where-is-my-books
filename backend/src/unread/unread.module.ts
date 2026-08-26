@@ -4,7 +4,7 @@ import { Book } from '../books/book.entity';
 import { Category } from '../categories/category.entity';
 import { Genre } from '../genres/genre.entity';
 import { UnreadSnapshot } from './unread-snapshot.entity';
-import { UnreadCategoryTarget } from './unread-category-target.entity';
+import { UnreadGenreTarget } from './unread-genre-target.entity';
 import { UnreadService } from './unread.service';
 import { UnreadController } from './unread.controller';
 
@@ -15,7 +15,7 @@ import { UnreadController } from './unread.controller';
       Category,
       Genre,
       UnreadSnapshot,
-      UnreadCategoryTarget,
+      UnreadGenreTarget,
     ]),
   ],
   controllers: [UnreadController],

@@ -31,11 +31,11 @@ export class UnreadStore {
     }
   }
 
-  async setTarget(categoryId: number, target: number | null): Promise<void> {
-    await api.setUnreadCategoryTarget(categoryId, target);
+  async setGenreTarget(genreId: number, target: number | null): Promise<void> {
+    await api.setUnreadGenreTarget(genreId, target);
     runInAction(() => {
-      const cat = this.overview?.categories.find((c) => c.categoryId === categoryId);
-      if (cat) cat.target = target;
+      const g = this.overview?.genres.find((g) => g.genreId === genreId);
+      if (g) g.target = target;
     });
   }
 }

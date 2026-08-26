@@ -1,12 +1,11 @@
-export type BookStatus = 'read' | 'bought' | 'wishlist' | 'abandoned';
+export type BookStatus = 'read' | 'bought' | 'wishlist';
 
-export const BOOK_STATUSES: BookStatus[] = ['read', 'bought', 'wishlist', 'abandoned'];
+export const BOOK_STATUSES: BookStatus[] = ['read', 'bought', 'wishlist'];
 
 export const BOOK_STATUS_LABELS: Record<BookStatus, string> = {
   read: 'Прочитана',
   bought: 'Куплена, не прочитана',
   wishlist: 'В списке желаемого',
-  abandoned: 'Брошена',
 };
 
 export interface Category {
@@ -147,7 +146,6 @@ export interface UnreadCategoryInfo {
   categoryId: number | null;
   name: string;
   count: number;
-  target: number | null;
 }
 
 export interface UnreadGenreInfo {
@@ -156,6 +154,12 @@ export interface UnreadGenreInfo {
   categoryId: number | null;
   categoryName: string;
   count: number;
+  target: number | null;
+}
+
+export interface UnreadYearInfo {
+  year: number | null;
+  count: number;
 }
 
 export interface UnreadOverview {
@@ -163,6 +167,7 @@ export interface UnreadOverview {
   total: { current: number; previousMonth: number | null };
   categories: UnreadCategoryInfo[];
   genres: UnreadGenreInfo[];
+  yearBreakdown: UnreadYearInfo[];
   generatedAt: string;
 }
 

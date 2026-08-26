@@ -11,8 +11,8 @@ export class UnreadController {
     return this.service.getOverview();
   }
 
-  @Patch('categories/:id/target')
-  setTarget(@Param('id') id: string, @Body() dto: UpdateUnreadTargetDto) {
-    return this.service.setTarget(+id, dto.target ?? null);
+  @Patch('genres/:id/target')
+  setGenreTarget(@Param('id') id: string, @Body() dto: UpdateUnreadTargetDto) {
+    return this.service.setGenreTarget(+id, dto.target ?? null);
   }
 }

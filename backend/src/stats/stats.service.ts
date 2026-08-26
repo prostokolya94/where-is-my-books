@@ -38,7 +38,6 @@ export class StatsService {
       [BookStatus.READ]: 0,
       [BookStatus.BOUGHT]: 0,
       [BookStatus.WISHLIST]: 0,
-      [BookStatus.ABANDONED]: 0,
     };
     const allBooks = await this.bookRepo.find();
     for (const book of allBooks) {

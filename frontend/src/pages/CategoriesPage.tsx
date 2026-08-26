@@ -145,7 +145,9 @@ const CategoryCard = observer(
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const genreList = catalog.genres.filter((g) => g.categoryId === (category?.id ?? null));
+    const genreList = catalog.genres
+      .filter((g) => g.categoryId === (category?.id ?? null))
+      .sort((a, b) => counts(b.id) - counts(a.id));
     const [dragGenre, setDragGenre] = useState<number | null>(null);
     const [overGenre, setOverGenre] = useState<number | null>(null);
 
