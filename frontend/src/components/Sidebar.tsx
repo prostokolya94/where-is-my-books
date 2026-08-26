@@ -1,10 +1,26 @@
-import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { rootStore } from '../stores/rootStore';
 import { uiStore } from '../stores/uiStore';
+import ConfirmDialog from './ConfirmDialog';
+import type { Tab } from '../api/types';
 
 const Sidebar = observer(() => {
   const { tabs } = rootStore;
+  const navigate = useNavigate();
+  const [deleteTarget, setDeleteTarget] = useState<Tab | null>(null);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const id = deleteTarget.id;
+    await tabs.remove(id);
+    setDeleteTarget(null);
+    if (location.pathname === `/tabs/${id}`) {
+      navigate('/');
+    }
+  };
 
   return (
     <aside className="sidebar">
@@ -61,9 +77,16 @@ const Sidebar = observer(() => {
               className={({ isActive }) => `sidebar-link sidebar-link-tab ${isActive ? 'active' : ''}`}
             >
               <span className="nav-dot" />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                 {tab.name}
               </span>
+              <button
+                className="sidebar-tab-delete"
+                title="Удалить таб"
+                onClick={(e) => { e.preventDefault(); setDeleteTarget(tab); }}
+              >
+                ✕
+              </button>
             </NavLink>
           ))}
           <button className="sidebar-add" onClick={() => uiStore.openNewTab()}>
@@ -96,6 +119,16 @@ const Sidebar = observer(() => {
         </button>
         <div style={{ marginTop: 8 }}>Where Is My Books · v1.0</div>
       </div>
+
+      {deleteTarget && createPortal(
+        <ConfirmDialog
+          title="Удалить таб?"
+          message={`Таб «${deleteTarget.name}» будет удалён безвозвратно.`}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />,
+        document.body,
+      )}
     </aside>
   );
 });

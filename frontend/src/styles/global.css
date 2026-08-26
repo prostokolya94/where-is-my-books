@@ -204,6 +204,36 @@ textarea {
   justify-content: space-between;
 }
 
+.sidebar-link-tab.active .nav-dot {
+  background: #4A90D9;
+}
+
+.sidebar-tab-delete {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.sidebar-link-tab:hover .sidebar-tab-delete {
+  display: flex;
+}
+
+.sidebar-tab-delete:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
 .sidebar-add {
   display: flex;
   align-items: center;
@@ -828,7 +858,7 @@ textarea {
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 150;
   max-height: 200px;
   overflow-y: auto;
   background: var(--surface);
@@ -886,7 +916,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 200;
   padding: 12px;
   overscroll-behavior: contain;
 }
@@ -903,6 +933,7 @@ textarea {
   flex-direction: column;
   overflow: hidden;
   animation: modal-in 0.18s ease;
+  color: var(--ink);
 }
 
 .modal-tall {
@@ -929,6 +960,7 @@ textarea {
 
 .modal-title {
   font-size: 21px;
+  color: var(--ink);
 }
 
 .modal-close {
@@ -952,6 +984,7 @@ textarea {
   overscroll-behavior: contain;
   flex: 1;
   min-height: 0;
+  color: var(--ink);
 }
 
 .modal-footer {
