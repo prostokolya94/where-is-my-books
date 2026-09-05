@@ -24,6 +24,14 @@ export class CreateBookDto {
   purchaseYear?: number | null;
 
   @IsOptional()
+  @IsInt()
+  readYear?: number | null;
+
+  @IsOptional()
+  @IsInt()
+  readMonth?: number | null;
+
+  @IsOptional()
   @IsEnum(BookStatus)
   status?: BookStatus;
 
@@ -55,6 +63,14 @@ export class UpdateBookDto {
   @IsOptional()
   @IsInt()
   purchaseYear?: number | null;
+
+  @IsOptional()
+  @IsInt()
+  readYear?: number | null;
+
+  @IsOptional()
+  @IsInt()
+  readMonth?: number | null;
 
   @IsOptional()
   @IsEnum(BookStatus)

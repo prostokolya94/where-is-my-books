@@ -126,7 +126,13 @@ export class BooksService {
     const existing = await this.repo.findOneBy({ id });
     if (!existing) throw new NotFoundException('Книга не найдена');
     const statusChanged = dto.status !== undefined && dto.status !== existing.status;
-    await this.repo.update(id, dto);
+    const payload = { ...dto };
+    const now = new Date();
+    if (statusChanged && dto.status === BookStatus.READ) {
+      if (payload.readYear == null) payload.readYear = now.getFullYear();
+      if (payload.readMonth == null) payload.readMonth = now.getMonth() + 1;
+    }
+    await this.repo.update(id, payload);
     if (statusChanged) {
       await this.syncPlanFlags(id, dto.status!);
     }

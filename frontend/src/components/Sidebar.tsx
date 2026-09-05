@@ -64,6 +64,13 @@ const Sidebar = observer(() => {
             <span className="nav-icon">▧</span>
             <span>Мониторинг непрочитанного</span>
           </NavLink>
+          <NavLink
+            to="/read"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+          >
+            <span className="nav-icon">▨</span>
+            <span>Мониторинг прочитанного</span>
+          </NavLink>
         </nav>
       </div>
 

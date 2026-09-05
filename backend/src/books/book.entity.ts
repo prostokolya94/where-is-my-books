@@ -25,6 +25,12 @@ export class Book {
   @Column({ type: 'integer', nullable: true })
   purchaseYear: number | null;
 
+  @Column({ type: 'integer', nullable: true })
+  readYear: number | null;
+
+  @Column({ type: 'integer', nullable: true })
+  readMonth: number | null;
+
   @Column({ type: 'varchar', default: BookStatus.WISHLIST })
   status: BookStatus;
 

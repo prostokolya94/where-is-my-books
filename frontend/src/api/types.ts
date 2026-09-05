@@ -30,6 +30,8 @@ export interface Book {
   title: string;
   author: string;
   purchaseYear: number | null;
+  readYear: number | null;
+  readMonth: number | null;
   status: BookStatus;
   categoryId: number | null;
   genreId: number | null;
@@ -180,4 +182,39 @@ export interface BackupInfo {
 export interface CreateBackupResult {
   backups: BackupInfo[];
   deleted: string | null;
+}
+
+export interface ReadBar {
+  categoryId: number | null;
+  name: string;
+  count: number;
+}
+
+export interface GenreBar {
+  genreId: number | null;
+  name: string;
+  count: number;
+}
+
+export interface ReadPeriodCharts {
+  all: ReadBar[];
+  year: ReadBar[];
+  month: ReadBar[];
+}
+
+export interface ReadCategoryBlock {
+  categoryId: number | null;
+  name: string;
+  periods: {
+    all: GenreBar[];
+    year: GenreBar[];
+    month: GenreBar[];
+  };
+}
+
+export interface ReadOverview {
+  total: { current: number; previousMonth: number | null };
+  categories: ReadPeriodCharts;
+  byCategory: ReadCategoryBlock[];
+  generatedAt: string;
 }

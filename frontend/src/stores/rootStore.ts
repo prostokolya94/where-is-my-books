@@ -4,6 +4,7 @@ import { TabStore } from './tabStore';
 import { StatsStore } from './statsStore';
 import { PlanStore } from './planStore';
 import { UnreadStore } from './unreadStore';
+import { ReadStore } from './readStore';
 
 class RootStore {
   catalog: CatalogStore;
@@ -12,6 +13,7 @@ class RootStore {
   stats: StatsStore;
   plans: PlanStore;
   unread: UnreadStore;
+  read: ReadStore;
 
   constructor() {
     this.catalog = new CatalogStore();
@@ -20,6 +22,7 @@ class RootStore {
     this.stats = new StatsStore();
     this.plans = new PlanStore();
     this.unread = new UnreadStore();
+    this.read = new ReadStore();
   }
 
   async init(): Promise<void> {

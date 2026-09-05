@@ -9,6 +9,7 @@ import CategoriesPage from './pages/CategoriesPage';
 import StatsPage from './pages/StatsPage';
 import PlansPage from './pages/PlansPage';
 import UnreadMonitoringPage from './pages/UnreadMonitoringPage';
+import ReadMonitoringPage from './pages/ReadMonitoringPage';
 import TabEditorModal from './components/TabEditorModal';
 import BackupsModal from './components/BackupsModal';
 import { uiStore } from './stores/uiStore';
@@ -29,6 +30,7 @@ const App = observer(() => {
           <Route path="/stats" element={<StatsPage />} />
           <Route path="/plans" element={<PlansPage />} />
           <Route path="/unread" element={<UnreadMonitoringPage />} />
+          <Route path="/read" element={<ReadMonitoringPage />} />
         </Routes>
       </main>
       <TabEditorModal />

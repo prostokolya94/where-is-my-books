@@ -20,6 +20,8 @@ const emptyForm = {
   author: '',
   purchaseYear: '',
   status: 'wishlist' as BookStatus,
+  readYear: '',
+  readMonth: '',
   categoryId: '' as string | number,
   genreId: '' as string | number,
   price: '',
@@ -62,6 +64,8 @@ const BookFormModal = observer(({ book, onClose }: Props) => {
         author: book.author,
         purchaseYear: book.purchaseYear?.toString() ?? '',
         status: book.status,
+        readYear: book.readYear?.toString() ?? '',
+        readMonth: book.readMonth?.toString() ?? '',
         categoryId: book.categoryId ?? '',
         genreId: book.genreId ?? '',
         price: book.price?.toString() ?? '',
@@ -98,6 +102,8 @@ const BookFormModal = observer(({ book, onClose }: Props) => {
         author: form.author.trim(),
         purchaseYear: form.purchaseYear ? Number(form.purchaseYear) : null,
         status: form.status,
+        readYear: form.readYear ? Number(form.readYear) : null,
+        readMonth: form.readMonth ? Number(form.readMonth) : null,
         categoryId: categoryId,
         genreId: form.genreId === '' ? null : Number(form.genreId),
         price: form.price !== '' ? Number(form.price) : null,
@@ -121,6 +127,21 @@ const BookFormModal = observer(({ book, onClose }: Props) => {
     for (let y = currentYear; y >= currentYear - 60; y--) years.push(y);
     return years;
   }, []);
+
+  const monthOptions = [
+    { value: 1, label: 'Январь' },
+    { value: 2, label: 'Февраль' },
+    { value: 3, label: 'Март' },
+    { value: 4, label: 'Апрель' },
+    { value: 5, label: 'Май' },
+    { value: 6, label: 'Июнь' },
+    { value: 7, label: 'Июль' },
+    { value: 8, label: 'Август' },
+    { value: 9, label: 'Сентябрь' },
+    { value: 10, label: 'Октябрь' },
+    { value: 11, label: 'Ноябрь' },
+    { value: 12, label: 'Декабрь' },
+  ];
 
   return (
     <Modal
@@ -197,6 +218,36 @@ const BookFormModal = observer(({ book, onClose }: Props) => {
           <select
             value={form.purchaseYear}
             onChange={(e) => set('purchaseYear', e.target.value)}
+          >
+            <option value="">Не указан</option>
+            {yearOptions.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-field">
+          <label>Прочитана (месяц)</label>
+          <select
+            value={form.readMonth}
+            onChange={(e) => set('readMonth', e.target.value)}
+            disabled={form.status !== 'read'}
+          >
+            <option value="">Не указан</option>
+            {monthOptions.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-field">
+          <label>Прочитана (год)</label>
+          <select
+            value={form.readYear}
+            onChange={(e) => set('readYear', e.target.value)}
+            disabled={form.status !== 'read'}
           >
             <option value="">Не указан</option>
             {yearOptions.map((y) => (

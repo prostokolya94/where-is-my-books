@@ -14,6 +14,7 @@ import type {
   Tab,
   TabFilters,
   UnreadOverview,
+  ReadOverview,
 } from './types';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -152,6 +153,8 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ target }),
     }),
+
+  getReadOverview: () => request<ReadOverview>('/api/read'),
 
   getBackups: () => request<BackupInfo[]>('/api/backups'),
   createBackup: () => request<CreateBackupResult>('/api/backups', { method: 'POST' }),

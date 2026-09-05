@@ -2,190 +2,26 @@ import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useNavigate } from 'react-router-dom';
 import { rootStore } from '../stores/rootStore';
+import { BarChart, type BarChartBar } from '../components/charts/BarChart';
 import type { UnreadSeriesPoint, UnreadYearInfo } from '../api/types';
 
 const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 
-function niceStep(maxVal: number): number {
-  if (maxVal <= 5) return 1;
-  if (maxVal <= 10) return 2;
-  if (maxVal <= 25) return 5;
-  if (maxVal <= 50) return 10;
-  if (maxVal <= 100) return 20;
-  if (maxVal <= 200) return 50;
-  if (maxVal <= 500) return 100;
-  return 200;
+function seriesToBars(series: UnreadSeriesPoint[]): BarChartBar[] {
+  return series.map((s) => ({
+    value: s.total,
+    label: `${MONTHS_SHORT[s.month - 1]} ${String(s.year).slice(2)}${s.isCurrent ? ' *' : ''}`,
+    fill: s.isCurrent ? 'var(--clay)' : 'var(--teal)',
+    opacity: s.isCurrent ? 1 : 0.5,
+    valueFill: s.isCurrent ? 'var(--clay)' : 'var(--pine)',
+  }));
 }
 
-function UnreadChart({ series }: { series: UnreadSeriesPoint[] }) {
-  const H = 250;
-  const top = 22;
-  const bottom = 30;
-  const left = 38;
-  const right = 10;
-  const slotW = 66;
-  const barW = 30;
-
-  if (series.length === 0) {
-    return <div className="loading-bar">Нет данных для графика</div>;
-  }
-
-  const maxVal = Math.max(...series.map((s) => s.total), 1);
-  const step = niceStep(maxVal);
-  const maxAxis = Math.ceil(maxVal / step) * step;
-  const plotH = H - top - bottom;
-  const W = series.length * slotW + left + right;
-
-  const yFor = (v: number) => top + plotH - (v / maxAxis) * plotH;
-
-  const gridlines: number[] = [];
-  for (let v = 0; v <= maxAxis; v += step) gridlines.push(v);
-
-  return (
-    <div className="unread-chart-scroll">
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="unread-chart">
-        {gridlines.map((v) => (
-          <g key={v}>
-            <line
-              x1={left}
-              y1={yFor(v)}
-              x2={W - right}
-              y2={yFor(v)}
-              stroke="#ece4d6"
-              strokeWidth={1}
-            />
-            <text x={left - 8} y={yFor(v) + 4} textAnchor="end" fontSize={11} fill="#948b7c">
-              {v}
-            </text>
-          </g>
-        ))}
-        {series.map((s, i) => {
-          const cx = left + i * slotW + slotW / 2;
-          const barHeight = Math.max((s.total / maxAxis) * plotH, s.total > 0 ? 2 : 1);
-          const y = yFor(s.total);
-          return (
-            <g key={`${s.year}-${s.month}`}>
-              <rect
-                x={cx - barW / 2}
-                y={y}
-                width={barW}
-                height={barHeight}
-                rx={4}
-                fill={s.isCurrent ? 'var(--clay)' : 'var(--teal)'}
-                opacity={s.isCurrent ? 1 : 0.5}
-              />
-              <text
-                x={cx}
-                y={y - 7}
-                textAnchor="middle"
-                fontSize={12}
-                fontWeight={600}
-                fill={s.isCurrent ? 'var(--clay)' : 'var(--pine)'}
-              >
-                {s.total}
-              </text>
-              <text
-                x={cx}
-                y={H - 9}
-                textAnchor="middle"
-                fontSize={11}
-                fontWeight={s.isCurrent ? 600 : 400}
-                fill="#948b7c"
-              >
-                {MONTHS_SHORT[s.month - 1]} {String(s.year).slice(2)}
-                {s.isCurrent ? ' *' : ''}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
-
-function YearBreakdownChart({ data }: { data: UnreadYearInfo[] }) {
-  const H = 220;
-  const top = 22;
-  const bottom = 30;
-  const left = 38;
-  const right = 10;
-  const barW = 36;
-
-  if (data.length === 0) {
-    return <div className="loading-bar">Нет данных</div>;
-  }
-
-  const maxVal = Math.max(...data.map((d) => d.count), 1);
-  const step = niceStep(maxVal);
-  const maxAxis = Math.ceil(maxVal / step) * step;
-  const plotH = H - top - bottom;
-  const slotW = Math.max(barW + 16, 56);
-  const W = data.length * slotW + left + right;
-
-  const yFor = (v: number) => top + plotH - (v / maxAxis) * plotH;
-
-  const gridlines: number[] = [];
-  for (let v = 0; v <= maxAxis; v += step) gridlines.push(v);
-
-  return (
-    <div className="unread-chart-scroll">
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="unread-chart">
-        {gridlines.map((v) => (
-          <g key={v}>
-            <line
-              x1={left}
-              y1={yFor(v)}
-              x2={W - right}
-              y2={yFor(v)}
-              stroke="#ece4d6"
-              strokeWidth={1}
-            />
-            <text x={left - 8} y={yFor(v) + 4} textAnchor="end" fontSize={11} fill="#948b7c">
-              {v}
-            </text>
-          </g>
-        ))}
-        {data.map((d) => {
-          const i = data.indexOf(d);
-          const cx = left + i * slotW + slotW / 2;
-          const barHeight = Math.max((d.count / maxAxis) * plotH, d.count > 0 ? 2 : 1);
-          const y = yFor(d.count);
-          const label = d.year !== null ? String(d.year) : 'нет';
-          return (
-            <g key={label}>
-              <rect
-                x={cx - barW / 2}
-                y={y}
-                width={barW}
-                height={barHeight}
-                rx={4}
-                fill="var(--clay)"
-              />
-              <text
-                x={cx}
-                y={y - 7}
-                textAnchor="middle"
-                fontSize={12}
-                fontWeight={600}
-                fill="var(--pine)"
-              >
-                {d.count}
-              </text>
-              <text
-                x={cx}
-                y={H - 9}
-                textAnchor="middle"
-                fontSize={11}
-                fill="#948b7c"
-              >
-                {label}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
+function yearsToBars(data: UnreadYearInfo[]): BarChartBar[] {
+  return data.map((d) => ({
+    value: d.count,
+    label: d.year !== null ? String(d.year) : 'нет',
+  }));
 }
 
 function TargetInput({
@@ -318,14 +154,18 @@ const UnreadMonitoringPage = observer(() => {
                 <span className="unread-dot unread-dot-frozen" /> замороженный месяц
               </span>
             </div>
-            <UnreadChart series={data.series} />
+            <div className="chart-scroll">
+              <BarChart bars={seriesToBars(data.series)} height={250} barWidth={30} />
+            </div>
           </div>
 
           <div className="unread-card">
             <div className="unread-card-head">
               <h3 className="unread-card-title">Остатки по году покупки</h3>
             </div>
-            <YearBreakdownChart data={data.yearBreakdown} />
+            <div className="chart-scroll">
+              <BarChart bars={yearsToBars(data.yearBreakdown)} />
+            </div>
           </div>
 
           <div className="unread-card">
