@@ -119,8 +119,8 @@ export class ReadService {
           count: catCounts.get(categoryId) ?? 0,
         });
       };
-      pushSingle(null);
       for (const category of categories) pushSingle(category.id);
+      pushSingle(null);
       return rows;
     };
 

@@ -218,3 +218,28 @@ export interface ReadOverview {
   byCategory: ReadCategoryBlock[];
   generatedAt: string;
 }
+
+export interface CostAccountFilters {
+  categories: number[];
+  genres: number[];
+  statuses: BookStatus[];
+  purchaseYearFrom: number | null;
+  purchaseYearTo: number | null;
+}
+
+export interface CostAccountView {
+  id: number;
+  name: string;
+  sortOrder: number;
+  filters: CostAccountFilters;
+  result: { sum: number; count: number };
+}
+
+export interface CostSummary {
+  total: number;
+  read: number;
+  unread: number;
+  counts: { total: number; read: number; unread: number };
+  accounts: CostAccountView[];
+  generatedAt: string;
+}

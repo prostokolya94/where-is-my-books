@@ -15,6 +15,9 @@ import type {
   TabFilters,
   UnreadOverview,
   ReadOverview,
+  CostAccountFilters,
+  CostAccountView,
+  CostSummary,
 } from './types';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -155,6 +158,20 @@ export const api = {
     }),
 
   getReadOverview: () => request<ReadOverview>('/api/read'),
+
+  getCostSummary: () => request<CostSummary>('/api/costs/summary'),
+  createCostAccount: (data: { name: string } & CostAccountFilters) =>
+    request<CostAccountView>('/api/costs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateCostAccount: (id: number, data: { name: string } & CostAccountFilters) =>
+    request<CostAccountView>(`/api/costs/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteCostAccount: (id: number) =>
+    request<void>(`/api/costs/${id}`, { method: 'DELETE' }),
 
   getBackups: () => request<BackupInfo[]>('/api/backups'),
   createBackup: () => request<CreateBackupResult>('/api/backups', { method: 'POST' }),

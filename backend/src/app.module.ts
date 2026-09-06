@@ -9,6 +9,7 @@ import { StatsModule } from './stats/stats.module';
 import { PlansModule } from './plans/plans.module';
 import { UnreadModule } from './unread/unread.module';
 import { ReadModule } from './read/read.module';
+import { CostsModule } from './costs/costs.module';
 import { BackupsModule } from './backups/backups.module';
 
 @Module({
@@ -28,6 +29,7 @@ import { BackupsModule } from './backups/backups.module';
     PlansModule,
     UnreadModule,
     ReadModule,
+    CostsModule,
     BackupsModule,
   ],
 })
