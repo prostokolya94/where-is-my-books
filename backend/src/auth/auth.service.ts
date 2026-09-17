@@ -17,6 +17,7 @@ export interface AuthResult {
     login: string;
     fullName: string;
     canDownloadHisOwnDataBase: boolean;
+    isAdmin: boolean;
   };
 }
 
@@ -72,6 +73,7 @@ export class AuthService {
       login: user.login,
       fullName: user.fullName,
       canDownloadHisOwnDataBase: user.canDownloadHisOwnDataBase,
+      isAdmin: user.isAdmin,
     };
     const token = this.jwtService.sign(payload);
     return {
@@ -81,6 +83,7 @@ export class AuthService {
         login: user.login,
         fullName: user.fullName,
         canDownloadHisOwnDataBase: user.canDownloadHisOwnDataBase,
+        isAdmin: user.isAdmin,
       },
     };
   }

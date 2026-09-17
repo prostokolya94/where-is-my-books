@@ -2206,6 +2206,24 @@ textarea {
   margin: 12px 0;
 }
 
+.user-popup-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  margin-bottom: 4px;
+}
+
+.user-popup-item:hover {
+  background: var(--surface-soft);
+}
+
 .user-popup-logout {
   width: 100%;
   text-align: left;
@@ -2221,6 +2239,103 @@ textarea {
 
 .user-popup-logout:hover {
   background: rgba(179, 69, 69, 0.08);
+}
+
+/* ===== Admin ===== */
+
+.admin-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.admin-table thead th {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: var(--surface-soft);
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--surface-soft);
+}
+
+.admin-table-id {
+  color: var(--muted);
+}
+
+.admin-table-login {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.admin-table-date {
+  color: var(--muted);
+}
+
+.admin-table-empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 32px 16px;
+}
+
+.admin-toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-soft);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  padding: 0;
+}
+
+.admin-toggle .admin-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: left 0.15s ease, background 0.15s ease;
+}
+
+.admin-toggle.on {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
+.admin-toggle.on .admin-toggle-knob {
+  left: 20px;
+  background: #fff;
+}
+
+.admin-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 860px) {

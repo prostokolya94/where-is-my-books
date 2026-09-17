@@ -18,6 +18,10 @@ class AuthStore {
     return this.user !== null;
   }
 
+  get isAdmin(): boolean {
+    return this.user?.isAdmin === true;
+  }
+
   init(): void {
     try {
       const token = getToken();
@@ -26,12 +30,25 @@ class AuthStore {
         if (raw) {
           this.user = JSON.parse(raw) as AuthUser;
         }
+        this.refresh();
       }
     } catch {
       this.user = null;
     }
     this.initialized = true;
     window.addEventListener('wimb:unauthorized', this.onUnauthorized);
+  }
+
+  async refresh(): Promise<void> {
+    try {
+      const fresh = await api.me();
+      this.user = fresh;
+      try { localStorage.setItem(USER_KEY, JSON.stringify(fresh)); } catch { /* ignore */ }
+    } catch {
+      this.user = null;
+      setToken(null);
+      try { localStorage.removeItem(USER_KEY); } catch { /* ignore */ }
+    }
   }
 
   private onUnauthorized = (): void => {

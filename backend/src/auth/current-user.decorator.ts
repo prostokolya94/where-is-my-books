@@ -9,6 +9,7 @@ export interface AuthUser {
   login: string;
   fullName: string;
   canDownloadHisOwnDataBase: boolean;
+  isAdmin: boolean;
 }
 
 export const CurrentUser = createParamDecorator(

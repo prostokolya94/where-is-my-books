@@ -40,6 +40,7 @@ const BackupsModal = observer(() => {
 
   useEffect(() => {
     dumpsStore.load();
+    authStore.refresh();
   }, []);
 
   const store = dumpsStore;

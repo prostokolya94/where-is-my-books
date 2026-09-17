@@ -23,6 +23,9 @@ export class User {
   @Column({ default: false })
   canDownloadHisOwnDataBase: boolean;
 
+  @Column({ default: false })
+  isAdmin: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

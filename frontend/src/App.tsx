@@ -13,6 +13,7 @@ import PlansPage from './pages/PlansPage';
 import UnreadMonitoringPage from './pages/UnreadMonitoringPage';
 import ReadMonitoringPage from './pages/ReadMonitoringPage';
 import CostPage from './pages/CostPage';
+import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import TabEditorModal from './components/TabEditorModal';
@@ -41,6 +42,10 @@ const AppShell = observer(() => {
           <Route path="/unread" element={<UnreadMonitoringPage />} />
           <Route path="/read" element={<ReadMonitoringPage />} />
           <Route path="/costs" element={<CostPage />} />
+          <Route
+            path="/admin"
+            element={authStore.isAdmin ? <AdminPage /> : <Navigate to="/" replace />}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

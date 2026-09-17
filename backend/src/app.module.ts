@@ -11,6 +11,7 @@ import { ReadModule } from './read/read.module';
 import { CostsModule } from './costs/costs.module';
 import { DumpsModule } from './dumps/dumps.module';
 import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthModule } from './auth/auth.module';
       autoLoadEntities: true,
     }),
     AuthModule,
+    AdminModule,
     CategoriesModule,
     GenresModule,
     BooksModule,

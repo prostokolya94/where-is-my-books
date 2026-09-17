@@ -189,6 +189,7 @@ export interface AuthUser {
   login: string;
   fullName: string;
   canDownloadHisOwnDataBase: boolean;
+  isAdmin: boolean;
 }
 
 export interface AuthResult {
@@ -202,6 +203,15 @@ export interface DumpInfo {
   size: number;
   source: 'server' | 'upload';
   createdAt: string;
+}
+
+export interface AdminUser {
+  id: number;
+  login: string;
+  fullName: string;
+  isAdmin: boolean;
+  canDownloadHisOwnDataBase: boolean;
+  createdAt?: string;
 }
 
 export interface ReadBar {

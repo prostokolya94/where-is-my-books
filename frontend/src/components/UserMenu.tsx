@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { authStore } from '../stores/authStore';
 
 const UserMenu = observer(() => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!open) return;
+    authStore.refresh();
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
@@ -60,6 +63,17 @@ const UserMenu = observer(() => {
             </div>
           )}
           <div className="user-popup-divider" />
+          {user.isAdmin && (
+            <button
+              className="user-popup-item"
+              onClick={() => {
+                setOpen(false);
+                navigate('/admin');
+              }}
+            >
+              Админ-панель
+            </button>
+          )}
           <button
             className="user-popup-logout"
             onClick={() => {

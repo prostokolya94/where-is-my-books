@@ -3,6 +3,7 @@ import type {
   Book,
   Category,
   DumpInfo,
+  AdminUser,
   Genre,
   PaginatedBooks,
   PlanRow,
@@ -120,7 +121,14 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  me: () => request<{ id: number; login: string; fullName: string; canDownloadHisOwnDataBase: boolean }>('/api/auth/me'),
+  me: () => request<{ id: number; login: string; fullName: string; canDownloadHisOwnDataBase: boolean; isAdmin: boolean }>('/api/auth/me'),
+
+  getAdminUsers: () => request<AdminUser[]>('/api/admin/users'),
+  updateAdminUser: (id: number, data: { isAdmin?: boolean; canDownloadHisOwnDataBase?: boolean }) =>
+    request<AdminUser>(`/api/admin/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   getCategories: () => request<Category[]>('/api/categories'),
   createCategory: (data: { name: string }) =>

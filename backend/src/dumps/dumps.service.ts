@@ -12,6 +12,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { UserDump } from './user-dump.entity';
 import { AuthUser } from '../auth/current-user.decorator';
+import { User } from '../auth/user.entity';
 import { Book } from '../books/book.entity';
 import { Category } from '../categories/category.entity';
 import { Genre } from '../genres/genre.entity';
@@ -239,7 +240,7 @@ export class DumpsService {
     user: AuthUser,
     dumpId: number,
   ): Promise<{ data: Buffer; name: string }> {
-    this.ensureCanDownload(user);
+    await this.ensureCanDownload(user.id);
     const dump = await this.getOwned(user.id, dumpId);
     if (!dump.data) {
       throw new BadRequestException('Дамп повреждён: нет данных');
@@ -251,7 +252,7 @@ export class DumpsService {
     user: AuthUser,
     file: { originalname: string; size: number; buffer: Buffer },
   ): Promise<DumpInfo[]> {
-    this.ensureCanDownload(user);
+    await this.ensureCanDownload(user.id);
     if (!file?.buffer) {
       throw new BadRequestException('Файл не получен');
     }
@@ -301,8 +302,11 @@ export class DumpsService {
     return dump;
   }
 
-  private ensureCanDownload(user: AuthUser): void {
-    if (!user.canDownloadHisOwnDataBase) {
+  private async ensureCanDownload(userId: number): Promise<void> {
+    const user = await this.dataSource
+      .getRepository(User)
+      .findOneBy({ id: userId });
+    if (!user || user.canDownloadHisOwnDataBase !== true) {
       throw new ForbiddenException(
         'Скачивание базы недоступно для этой учётной записи',
       );

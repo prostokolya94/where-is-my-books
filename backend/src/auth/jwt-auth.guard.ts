@@ -37,6 +37,7 @@ export class JwtAuthGuard implements CanActivate {
         login: payload.login,
         fullName: payload.fullName,
         canDownloadHisOwnDataBase: payload.canDownloadHisOwnDataBase,
+        isAdmin: payload.isAdmin === true,
       };
     } catch {
       throw new UnauthorizedException('Не авторизован');
