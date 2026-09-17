@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { BooksService, BookQuery } from './books.service';
 import { CreateBookDto, UpdateBookDto } from './dto/book.dto';
+import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
 
 @Controller('books')
 export class BooksController {
@@ -23,35 +24,36 @@ export class BooksController {
     @Query('search') search?: string,
     @Query('offset') offset?: string,
     @Query('limit') limit?: string,
+    @CurrentUser() user?: AuthUser,
   ) {
     const query: BookQuery = { categories, genres, statuses, search };
     const off = Math.max(0, parseInt(offset ?? '0', 10) || 0);
     const lim = Math.min(200, Math.max(1, parseInt(limit ?? '30', 10) || 30));
-    return this.service.findAll(query, off, lim);
+    return this.service.findAll(query, off, lim, user?.id);
   }
 
   @Get('authors')
-  findAuthors() {
-    return this.service.findAuthors();
+  findAuthors(@CurrentUser() user: AuthUser) {
+    return this.service.findAuthors(user.id);
   }
 
   @Get('all')
-  findAllRaw() {
-    return this.service.findAllRaw();
+  findAllRaw(@CurrentUser() user: AuthUser) {
+    return this.service.findAllRaw(user.id);
   }
 
   @Post()
-  create(@Body() dto: CreateBookDto) {
-    return this.service.create(dto);
+  create(@Body() dto: CreateBookDto, @CurrentUser() user: AuthUser) {
+    return this.service.create(dto, user.id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateBookDto) {
-    return this.service.update(+id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateBookDto, @CurrentUser() user: AuthUser) {
+    return this.service.update(+id, dto, user.id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(+id);
+  remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.service.remove(+id, user.id);
   }
 }

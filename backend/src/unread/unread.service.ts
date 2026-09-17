@@ -61,20 +61,22 @@ export class UnreadService {
     private readonly targetRepo: Repository<UnreadGenreTarget>,
   ) {}
 
-  async getOverview(): Promise<UnreadOverview> {
-    await this.ensurePreviousMonthFrozen();
+  async getOverview(userId: number): Promise<UnreadOverview> {
+    await this.ensurePreviousMonthFrozen(userId);
 
-    const allBooks = await this.bookRepo.find();
+    const allBooks = await this.bookRepo.find({ where: { userId } });
     const unreadBooks = allBooks.filter((b) => b.status === UNREAD_STATUS);
 
     const categories = await this.categoryRepo.find({
+      where: { userId },
       order: { name: 'ASC' },
     });
     const genres = await this.genreRepo.find({
+      where: { userId },
       order: { name: 'ASC' },
       relations: { category: true },
     });
-    const targets = await this.targetRepo.find();
+    const targets = await this.targetRepo.find({ where: { userId } });
 
     const categoryNames = new Map(categories.map((c) => [c.id, c.name]));
 
@@ -154,6 +156,7 @@ export class UnreadService {
       });
 
     const snapshots = await this.snapshotRepo.find({
+      where: { userId },
       order: { year: 'ASC', month: 'ASC' },
     });
     const series: UnreadSeriesPoint[] = snapshots.map((s) => ({
@@ -191,12 +194,12 @@ export class UnreadService {
     };
   }
 
-  async setGenreTarget(genreId: number, target: number | null): Promise<void> {
-    const genre = await this.genreRepo.findOneBy({ id: genreId });
+  async setGenreTarget(genreId: number, target: number | null, userId: number): Promise<void> {
+    const genre = await this.genreRepo.findOneBy({ id: genreId, userId });
     if (!genre) {
       throw new NotFoundException('Жанр не найден');
     }
-    const existing = await this.targetRepo.findOneBy({ genreId });
+    const existing = await this.targetRepo.findOneBy({ genreId, userId });
     if (target == null) {
       if (existing) {
         await this.targetRepo.delete(existing.id);
@@ -208,23 +211,25 @@ export class UnreadService {
       await this.targetRepo.save(existing);
     } else {
       await this.targetRepo.save(
-        this.targetRepo.create({ genreId, target }),
+        this.targetRepo.create({ genreId, target, userId }),
       );
     }
   }
 
-  private async ensurePreviousMonthFrozen(): Promise<void> {
+  private async ensurePreviousMonthFrozen(userId: number): Promise<void> {
     const now = new Date();
     const prev = this.previousMonth(now.getFullYear(), now.getMonth() + 1);
     const existing = await this.snapshotRepo.findOneBy({
+      userId,
       year: prev.year,
       month: prev.month,
     });
     if (existing) return;
-    const allBooks = await this.bookRepo.find();
+    const allBooks = await this.bookRepo.find({ where: { userId } });
     const total = allBooks.filter((b) => b.status === UNREAD_STATUS).length;
     await this.snapshotRepo.save(
       this.snapshotRepo.create({
+        userId,
         year: prev.year,
         month: prev.month,
         total,

@@ -39,13 +39,14 @@ export class CostsService {
     private readonly bookRepo: Repository<Book>,
   ) {}
 
-  async getSummary(): Promise<CostSummary> {
-    const allBooks = await this.bookRepo.find();
+  async getSummary(userId: number): Promise<CostSummary> {
+    const allBooks = await this.bookRepo.find({ where: { userId } });
     const costBooks = allBooks.filter((b) => b.status !== BookStatus.WISHLIST);
     const readBooks = costBooks.filter((b) => b.status === BookStatus.READ);
     const boughtBooks = costBooks.filter((b) => b.status === BookStatus.BOUGHT);
 
     const accounts = await this.accountRepo.find({
+      where: { userId },
       order: { sortOrder: 'ASC', name: 'ASC' },
     });
 
@@ -63,31 +64,34 @@ export class CostsService {
     };
   }
 
-  async findAll(): Promise<CostAccountView[]> {
-    const allBooks = await this.bookRepo.find();
+  async findAll(userId: number): Promise<CostAccountView[]> {
+    const allBooks = await this.bookRepo.find({ where: { userId } });
     const accounts = await this.accountRepo.find({
+      where: { userId },
       order: { sortOrder: 'ASC', name: 'ASC' },
     });
     return accounts.map((account) => this.serialize(account, allBooks));
   }
 
-  async create(dto: CreateCostAccountDto): Promise<CostAccountView> {
+  async create(dto: CreateCostAccountDto, userId: number): Promise<CostAccountView> {
     const maxSort = await this.accountRepo
       .createQueryBuilder('account')
       .select('MAX(account.sortOrder)', 'max')
+      .where('account.userId = :userId', { userId })
       .getRawOne<{ max: number | null }>();
     const account = this.accountRepo.create({
       name: dto.name,
       filtersJson: CostsService.toFiltersJson(dto),
       sortOrder: dto.sortOrder ?? (maxSort?.max ?? -1) + 1,
+      userId,
     });
     const saved = await this.accountRepo.save(account);
-    const allBooks = await this.bookRepo.find();
+    const allBooks = await this.bookRepo.find({ where: { userId } });
     return this.serialize(saved, allBooks);
   }
 
-  async update(id: number, dto: UpdateCostAccountDto): Promise<CostAccountView> {
-    const account = await this.accountRepo.findOneBy({ id });
+  async update(id: number, dto: UpdateCostAccountDto, userId: number): Promise<CostAccountView> {
+    const account = await this.accountRepo.findOneBy({ id, userId });
     if (!account) throw new NotFoundException('Счёт не найден');
     if (dto.name !== undefined) account.name = dto.name;
     if (dto.sortOrder !== undefined) account.sortOrder = dto.sortOrder;
@@ -102,14 +106,14 @@ export class CostsService {
         dto.purchaseYearTo !== undefined ? dto.purchaseYearTo : current.purchaseYearTo,
     });
     const saved = await this.accountRepo.save(account);
-    const allBooks = await this.bookRepo.find();
+    const allBooks = await this.bookRepo.find({ where: { userId } });
     return this.serialize(saved, allBooks);
   }
 
-  async remove(id: number): Promise<void> {
-    const account = await this.accountRepo.findOneBy({ id });
+  async remove(id: number, userId: number): Promise<void> {
+    const account = await this.accountRepo.findOneBy({ id, userId });
     if (!account) throw new NotFoundException('Счёт не найден');
-    await this.accountRepo.delete(id);
+    await this.accountRepo.delete({ id, userId });
   }
 
   private serialize(account: CostAccount, allBooks: Book[]): CostAccountView {

@@ -16,6 +16,9 @@ export class Book {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ type: 'integer' })
+  userId: number;
+
   @Column()
   title: string;
 

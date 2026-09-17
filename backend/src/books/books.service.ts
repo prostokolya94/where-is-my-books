@@ -47,12 +47,17 @@ export class BooksService {
     query: BookQuery,
     offset = 0,
     limit = 30,
+    userId?: number,
   ): Promise<{ items: Book[]; total: number }> {
     const qb = this.repo
       .createQueryBuilder('book')
       .leftJoinAndSelect('book.category', 'category')
       .leftJoinAndSelect('book.genre', 'genre')
       .orderBy('book.createdAt', 'DESC');
+
+    if (userId != null) {
+      qb.andWhere('book.userId = :userId', { userId });
+    }
 
     const categories = toIdArray(query.categories);
     if (categories) {
@@ -88,27 +93,37 @@ export class BooksService {
     };
   }
 
-  async findAuthors(): Promise<string[]> {
-    const rows = await this.repo
+  async findAuthors(userId?: number): Promise<string[]> {
+    const qb = this.repo
       .createQueryBuilder('book')
       .select('DISTINCT book.author')
       .where("book.author != ''")
       .andWhere("book.author IS NOT NULL")
-      .orderBy('book.author', 'ASC')
-      .getRawMany<{ author: string }>();
+      .orderBy('book.author', 'ASC');
+
+    if (userId != null) {
+      qb.andWhere('book.userId = :userId', { userId });
+    }
+
+    const rows = await qb.getRawMany<{ author: string }>();
     return rows.map((r) => r.author);
   }
 
-  async findAllRaw(): Promise<Book[]> {
+  async findAllRaw(userId?: number): Promise<Book[]> {
+    const where: Record<string, unknown> = {};
+    if (userId != null) where.userId = userId;
     return this.repo.find({
+      where,
       relations: { category: true, genre: true },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findOne(id: number): Promise<Book> {
+  async findOne(id: number, userId?: number): Promise<Book> {
+    const where: Record<string, unknown> = { id };
+    if (userId != null) where.userId = userId;
     const book = await this.repo.findOne({
-      where: { id },
+      where,
       relations: { category: true, genre: true },
     });
     if (!book) {
@@ -117,14 +132,13 @@ export class BooksService {
     return book;
   }
 
-  async create(dto: CreateBookDto): Promise<Book> {
-    const book = this.repo.create(dto);
+  async create(dto: CreateBookDto, userId: number): Promise<Book> {
+    const book = this.repo.create({ ...dto, userId });
     return this.repo.save(book);
   }
 
-  async update(id: number, dto: UpdateBookDto): Promise<Book> {
-    const existing = await this.repo.findOneBy({ id });
-    if (!existing) throw new NotFoundException('Книга не найдена');
+  async update(id: number, dto: UpdateBookDto, userId: number): Promise<Book> {
+    const existing = await this.findOne(id, userId);
     const statusChanged = dto.status !== undefined && dto.status !== existing.status;
     const payload = { ...dto };
     const now = new Date();
@@ -132,43 +146,43 @@ export class BooksService {
       if (payload.readYear == null) payload.readYear = now.getFullYear();
       if (payload.readMonth == null) payload.readMonth = now.getMonth() + 1;
     }
-    await this.repo.update(id, payload);
+    await this.repo.update({ id, userId }, payload);
     if (statusChanged) {
-      await this.syncPlanFlags(id, dto.status!);
+      await this.syncPlanFlags(id, dto.status!, userId);
     }
-    return this.findOne(id);
+    return this.findOne(id, userId);
   }
 
-  async remove(id: number): Promise<void> {
-    const book = await this.findOne(id);
+  async remove(id: number, userId: number): Promise<void> {
+    const book = await this.findOne(id, userId);
     await this.planSubrows.update({ bookId: id }, { bookId: null });
     await this.planRows.update({ bookId: id }, { bookId: null });
-    await this.repo.delete(id);
+    await this.repo.delete({ id, userId });
   }
 
-  private async syncPlanFlags(bookId: number, status: BookStatus): Promise<void> {
+  private async syncPlanFlags(bookId: number, status: BookStatus, userId: number): Promise<void> {
     const purchased = status === BookStatus.BOUGHT;
 
-    const rows = await this.planRows.find({ where: { bookId } });
+    const rows = await this.planRows.find({ where: { bookId, userId } });
     for (const row of rows) {
-      const subcount = await this.planSubrows.count({ where: { rowId: row.id } });
+      const subcount = await this.planSubrows.count({ where: { rowId: row.id, userId } });
       if (subcount === 0 && row.purchased !== purchased) {
         row.purchased = purchased;
         await this.planRows.save(row);
       }
     }
 
-    const subrows = await this.planSubrows.find({ where: { bookId } });
+    const subrows = await this.planSubrows.find({ where: { bookId, userId } });
     for (const subrow of subrows) {
       if (subrow.purchased !== purchased) {
         subrow.purchased = purchased;
         await this.planSubrows.save(subrow);
-        await this.recomputePlanRow(subrow.rowId);
+        await this.recomputePlanRow(subrow.rowId, userId);
       }
     }
   }
 
-  private async recomputePlanRow(rowId: number): Promise<void> {
+  private async recomputePlanRow(rowId: number, userId: number): Promise<void> {
     const row = await this.planRows.findOneBy({ id: rowId });
     if (!row) return;
     const subrows = await this.planSubrows.find({ where: { rowId } });
@@ -178,7 +192,7 @@ export class BooksService {
       row.purchased = purchased;
       await this.planRows.save(row);
       if (row.bookId != null && row.bookId !== undefined) {
-        const linked = await this.repo.findOneBy({ id: row.bookId });
+        const linked = await this.repo.findOneBy({ id: row.bookId, userId });
         if (linked) {
           const status = purchased ? BookStatus.BOUGHT : BookStatus.WISHLIST;
           if (linked.status !== status) {

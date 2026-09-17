@@ -65,11 +65,12 @@ export class PlansService {
     private readonly booksRepo: Repository<Book>,
   ) {}
 
-  async onModuleInit(): Promise<void> {
-    const count = await this.yearsRepo.count();
+  async ensureDefaultYear(userId: number): Promise<void> {
+    const count = await this.yearsRepo.countBy({ userId });
     if (count === 0) {
       await this.yearsRepo.save(
         this.yearsRepo.create({
+          userId,
           year: new Date().getFullYear(),
           sortOrder: 0,
         }),
@@ -77,45 +78,47 @@ export class PlansService {
     }
   }
 
-  async findAll(): Promise<PlanYearResponse[]> {
+  async findAll(userId: number): Promise<PlanYearResponse[]> {
+    await this.ensureDefaultYear(userId);
     const years = await this.yearsRepo.find({
+      where: { userId },
       order: { year: 'ASC' },
       relations: { rows: { subrows: { book: true }, book: true } },
     });
     return years.map((year) => this.serializeYear(year));
   }
 
-  async createYear(dto: CreatePlanYearDto): Promise<PlanYearResponse> {
-    const existing = await this.yearsRepo.findOneBy({ year: dto.year });
+  async createYear(dto: CreatePlanYearDto, userId: number): Promise<PlanYearResponse> {
+    const existing = await this.yearsRepo.findOneBy({ year: dto.year, userId });
     if (existing) {
       throw new ConflictException('Этот год уже есть в плане покупок');
     }
     const saved = await this.yearsRepo.save(
-      this.yearsRepo.create({ year: dto.year, sortOrder: dto.sortOrder ?? 0 }),
+      this.yearsRepo.create({ year: dto.year, sortOrder: dto.sortOrder ?? 0, userId }),
     );
     return { id: saved.id, year: saved.year, sortOrder: saved.sortOrder, rows: [] };
   }
 
-  async removeYear(id: number): Promise<void> {
-    const year = await this.yearsRepo.findOneBy({ id });
+  async removeYear(id: number, userId: number): Promise<void> {
+    const year = await this.yearsRepo.findOneBy({ id, userId });
     if (!year) {
       throw new NotFoundException('Год не найден');
     }
-    const rows = await this.rowsRepo.find({ where: { yearId: id } });
+    const rows = await this.rowsRepo.find({ where: { yearId: id, userId } });
     for (const row of rows) {
-      await this.subrowsRepo.delete({ rowId: row.id });
+      await this.subrowsRepo.delete({ rowId: row.id, userId });
     }
-    await this.rowsRepo.delete({ yearId: id });
-    await this.yearsRepo.delete(id);
+    await this.rowsRepo.delete({ yearId: id, userId });
+    await this.yearsRepo.delete({ id, userId });
   }
 
-  async createRow(dto: CreatePlanRowDto): Promise<PlanRowResponse> {
-    const year = await this.yearsRepo.findOneBy({ id: dto.yearId });
+  async createRow(dto: CreatePlanRowDto, userId: number): Promise<PlanRowResponse> {
+    const year = await this.yearsRepo.findOneBy({ id: dto.yearId, userId });
     if (!year) {
       throw new NotFoundException('Год не найден');
     }
     if (dto.bookId != null) {
-      await this.assertBook(dto.bookId);
+      await this.assertBook(dto.bookId, userId);
     }
     const saved = await this.rowsRepo.save(
       this.rowsRepo.create({
@@ -124,18 +127,19 @@ export class PlansService {
         purchased: false,
         bookId: dto.bookId ?? null,
         sortOrder: dto.sortOrder ?? 0,
+        userId,
       }),
     );
-    return this.getRow(saved.id);
+    return this.getRow(saved.id, userId);
   }
 
-  async updateRow(id: number, dto: UpdatePlanRowDto): Promise<PlanRowResponse> {
-    const row = await this.getRowEntity(id);
-    const subcount = await this.subrowsRepo.count({ where: { rowId: id } });
+  async updateRow(id: number, dto: UpdatePlanRowDto, userId: number): Promise<PlanRowResponse> {
+    const row = await this.getRowEntity(id, userId);
+    const subcount = await this.subrowsRepo.count({ where: { rowId: id, userId } });
 
     if (dto.bookId !== undefined) {
       if (dto.bookId != null) {
-        await this.assertBook(dto.bookId);
+        await this.assertBook(dto.bookId, userId);
       }
       row.bookId = dto.bookId;
     }
@@ -152,28 +156,28 @@ export class PlansService {
       const shouldBought = dto.purchased !== undefined && subcount === 0
         ? dto.purchased
         : saved.purchased;
-      await this.syncBookStatus(saved.bookId, shouldBought);
+      await this.syncBookStatus(saved.bookId, shouldBought, userId);
     }
 
-    return this.getRow(id);
+    return this.getRow(id, userId);
   }
 
-  async removeRow(id: number): Promise<void> {
-    const row = await this.rowsRepo.findOneBy({ id });
+  async removeRow(id: number, userId: number): Promise<void> {
+    const row = await this.rowsRepo.findOneBy({ id, userId });
     if (!row) {
       throw new NotFoundException('Строка не найдена');
     }
-    await this.subrowsRepo.delete({ rowId: id });
-    await this.rowsRepo.delete(id);
+    await this.subrowsRepo.delete({ rowId: id, userId });
+    await this.rowsRepo.delete({ id, userId });
   }
 
-  async createSubrow(dto: CreatePlanSubrowDto): Promise<PlanSubrowMutationResult> {
-    const row = await this.rowsRepo.findOneBy({ id: dto.rowId });
+  async createSubrow(dto: CreatePlanSubrowDto, userId: number): Promise<PlanSubrowMutationResult> {
+    const row = await this.rowsRepo.findOneBy({ id: dto.rowId, userId });
     if (!row) {
       throw new NotFoundException('Строка не найдена');
     }
     if (dto.bookId != null) {
-      await this.assertBook(dto.bookId);
+      await this.assertBook(dto.bookId, userId);
     }
     const saved = await this.subrowsRepo.save(
       this.subrowsRepo.create({
@@ -182,20 +186,21 @@ export class PlansService {
         purchased: false,
         bookId: dto.bookId ?? null,
         sortOrder: dto.sortOrder ?? 0,
+        userId,
       }),
     );
-    await this.recomputeRow(dto.rowId);
-    return { row: await this.getRow(dto.rowId), subrow: await this.getSubrow(saved.id) };
+    await this.recomputeRow(dto.rowId, userId);
+    return { row: await this.getRow(dto.rowId, userId), subrow: await this.getSubrow(saved.id, userId) };
   }
 
-  async updateSubrow(id: number, dto: UpdatePlanSubrowDto): Promise<PlanSubrowMutationResult> {
-    const subrow = await this.subrowsRepo.findOneBy({ id });
+  async updateSubrow(id: number, dto: UpdatePlanSubrowDto, userId: number): Promise<PlanSubrowMutationResult> {
+    const subrow = await this.subrowsRepo.findOneBy({ id, userId });
     if (!subrow) {
       throw new NotFoundException('Подстрока не найдена');
     }
     if (dto.bookId !== undefined) {
       if (dto.bookId != null) {
-        await this.assertBook(dto.bookId);
+        await this.assertBook(dto.bookId, userId);
       }
       subrow.bookId = dto.bookId;
     }
@@ -207,25 +212,25 @@ export class PlansService {
 
     if (saved.bookId != null) {
       const shouldBought = dto.purchased !== undefined ? dto.purchased : saved.purchased;
-      await this.syncBookStatus(saved.bookId, shouldBought);
+      await this.syncBookStatus(saved.bookId, shouldBought, userId);
     }
 
-    await this.recomputeRow(subrow.rowId);
-    return { row: await this.getRow(subrow.rowId) };
+    await this.recomputeRow(subrow.rowId, userId);
+    return { row: await this.getRow(subrow.rowId, userId) };
   }
 
-  async removeSubrow(id: number): Promise<PlanSubrowMutationResult> {
-    const subrow = await this.subrowsRepo.findOneBy({ id });
+  async removeSubrow(id: number, userId: number): Promise<PlanSubrowMutationResult> {
+    const subrow = await this.subrowsRepo.findOneBy({ id, userId });
     if (!subrow) {
       throw new NotFoundException('Подстрока не найдена');
     }
     const rowId = subrow.rowId;
-    await this.subrowsRepo.delete(id);
-    await this.recomputeRow(rowId);
-    return { row: await this.getRow(rowId) };
+    await this.subrowsRepo.delete({ id, userId });
+    await this.recomputeRow(rowId, userId);
+    return { row: await this.getRow(rowId, userId) };
   }
 
-  private async recomputeRow(rowId: number): Promise<void> {
+  private async recomputeRow(rowId: number, userId: number): Promise<void> {
     const row = await this.rowsRepo.findOneBy({ id: rowId });
     if (!row) return;
     const subrows = await this.subrowsRepo.find({ where: { rowId } });
@@ -235,13 +240,13 @@ export class PlansService {
       row.purchased = purchased;
       await this.rowsRepo.save(row);
       if (row.bookId != null) {
-        await this.syncBookStatus(row.bookId, purchased);
+        await this.syncBookStatus(row.bookId, purchased, userId);
       }
     }
   }
 
-  private async syncBookStatus(bookId: number, purchased: boolean): Promise<void> {
-    const book = await this.booksRepo.findOneBy({ id: bookId });
+  private async syncBookStatus(bookId: number, purchased: boolean, userId: number): Promise<void> {
+    const book = await this.booksRepo.findOneBy({ id: bookId, userId });
     if (!book) return;
     const status = purchased ? BookStatus.BOUGHT : BookStatus.WISHLIST;
     if (book.status !== status) {
@@ -250,24 +255,24 @@ export class PlansService {
     }
   }
 
-  private async assertBook(bookId: number): Promise<void> {
-    const book = await this.booksRepo.findOneBy({ id: bookId });
+  private async assertBook(bookId: number, userId: number): Promise<void> {
+    const book = await this.booksRepo.findOneBy({ id: bookId, userId });
     if (!book) {
       throw new NotFoundException('Книга не найдена');
     }
   }
 
-  private async getRowEntity(id: number): Promise<PurchasePlanRow> {
-    const row = await this.rowsRepo.findOneBy({ id });
+  private async getRowEntity(id: number, userId: number): Promise<PurchasePlanRow> {
+    const row = await this.rowsRepo.findOneBy({ id, userId });
     if (!row) {
       throw new NotFoundException('Строка не найдена');
     }
     return row;
   }
 
-  private async getRow(id: number): Promise<PlanRowResponse> {
+  private async getRow(id: number, userId: number): Promise<PlanRowResponse> {
     const row = await this.rowsRepo.findOne({
-      where: { id },
+      where: { id, userId },
       relations: { subrows: { book: true }, book: true },
     });
     if (!row) {
@@ -276,9 +281,9 @@ export class PlansService {
     return this.serializeRow(row);
   }
 
-  private async getSubrow(id: number): Promise<PlanSubrowResponse> {
+  private async getSubrow(id: number, userId: number): Promise<PlanSubrowResponse> {
     const subrow = await this.subrowsRepo.findOne({
-      where: { id },
+      where: { id, userId },
       relations: { book: true },
     });
     if (!subrow) {

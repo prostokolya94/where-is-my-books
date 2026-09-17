@@ -18,6 +18,9 @@ export class Tab {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ type: 'integer' })
+  userId: number;
+
   @Column()
   name: string;
 

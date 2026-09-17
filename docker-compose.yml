@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: where-is-my-books-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: books
+    ports:
+      - '5432:5432'
+    volumes:
+      - wimb_pgdata:/var/lib/postgresql/data
+
+volumes:
+  wimb_pgdata:

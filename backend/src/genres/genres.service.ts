@@ -14,51 +14,53 @@ export class GenresService {
     private readonly bookRepo: Repository<Book>,
   ) {}
 
-  async findAll(): Promise<Genre[]> {
+  async findAll(userId: number): Promise<Genre[]> {
     return this.repo.find({
+      where: { userId },
       order: { sortOrder: 'ASC', name: 'ASC' },
     });
   }
 
-  async findOne(id: number): Promise<Genre> {
-    const genre = await this.repo.findOneBy({ id });
+  async findOne(id: number, userId: number): Promise<Genre> {
+    const genre = await this.repo.findOneBy({ id, userId });
     if (!genre) {
       throw new NotFoundException('Жанр не найден');
     }
     return genre;
   }
 
-  async create(dto: CreateGenreDto): Promise<Genre> {
+  async create(dto: CreateGenreDto, userId: number): Promise<Genre> {
     const categoryId = dto.categoryId ?? null;
-    const count = await this.repo.countBy({ categoryId });
+    const count = await this.repo.countBy({ userId, categoryId });
     const genre = this.repo.create({
       ...dto,
+      userId,
       categoryId,
       sortOrder: dto.sortOrder ?? count,
     });
     return this.repo.save(genre);
   }
 
-  async reorder(ids: number[]): Promise<void> {
+  async reorder(ids: number[], userId: number): Promise<void> {
     for (let i = 0; i < ids.length; i++) {
-      await this.repo.update(ids[i], { sortOrder: i });
+      await this.repo.update({ id: ids[i], userId }, { sortOrder: i });
     }
   }
 
-  async update(id: number, dto: UpdateGenreDto): Promise<Genre> {
-    const genre = await this.findOne(id);
+  async update(id: number, dto: UpdateGenreDto, userId: number): Promise<Genre> {
+    const genre = await this.findOne(id, userId);
     Object.assign(genre, dto);
     return this.repo.save(genre);
   }
 
-  async remove(id: number): Promise<void> {
-    const genre = await this.findOne(id);
+  async remove(id: number, userId: number): Promise<void> {
+    const genre = await this.findOne(id, userId);
 
     await this.bookRepo
       .createQueryBuilder()
       .update(Book)
       .set({ genreId: null })
-      .where('genreId = :id', { id })
+      .where('genreId = :id AND "userId" = :userId', { id, userId })
       .execute();
 
     await this.repo.delete(id);

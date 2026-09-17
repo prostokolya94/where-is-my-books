@@ -7,10 +7,13 @@ import {
 } from 'typeorm';
 
 @Entity('unread_monthly_snapshots')
-@Index(['year', 'month'], { unique: true })
+@Index(['userId', 'year', 'month'], { unique: true })
 export class UnreadSnapshot {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ type: 'integer' })
+  userId: number;
 
   @Column({ type: 'integer' })
   year: number;

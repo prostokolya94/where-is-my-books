@@ -20,6 +20,9 @@ export class CostAccount {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ type: 'integer' })
+  userId: number;
+
   @Column()
   name: string;
 

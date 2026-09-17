@@ -173,15 +173,35 @@ export interface UnreadOverview {
   generatedAt: string;
 }
 
-export interface BackupInfo {
-  name: string;
-  size: number;
-  createdAt: string;
+export interface LoginPayload {
+  login: string;
+  password: string;
 }
 
-export interface CreateBackupResult {
-  backups: BackupInfo[];
-  deleted: string | null;
+export interface RegisterPayload {
+  login: string;
+  password: string;
+  fullName: string;
+}
+
+export interface AuthUser {
+  id: number;
+  login: string;
+  fullName: string;
+  canDownloadHisOwnDataBase: boolean;
+}
+
+export interface AuthResult {
+  token: string;
+  user: AuthUser;
+}
+
+export interface DumpInfo {
+  id: number;
+  name: string;
+  size: number;
+  source: 'server' | 'upload';
+  createdAt: string;
 }
 
 export interface ReadBar {

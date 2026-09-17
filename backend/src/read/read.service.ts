@@ -66,19 +66,21 @@ export class ReadService {
     private readonly genreRepo: Repository<Genre>,
   ) {}
 
-  async getOverview(): Promise<ReadOverview> {
+  async getOverview(userId: number): Promise<ReadOverview> {
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
     const prev = this.previousMonth(currentYear, currentMonth);
 
-    const allBooks = await this.bookRepo.find();
+    const allBooks = await this.bookRepo.find({ where: { userId } });
     const readBooks = allBooks.filter((b) => b.status === READ_STATUS);
 
     const categories = await this.categoryRepo.find({
+      where: { userId },
       order: { name: 'ASC' },
     });
     const genres = await this.genreRepo.find({
+      where: { userId },
       order: { name: 'ASC' },
       relations: { category: true },
     });

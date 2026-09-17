@@ -1,8 +1,8 @@
 import type {
-  BackupInfo,
+  AuthResult,
   Book,
   Category,
-  CreateBackupResult,
+  DumpInfo,
   Genre,
   PaginatedBooks,
   PlanRow,
@@ -18,14 +18,49 @@ import type {
   CostAccountFilters,
   CostAccountView,
   CostSummary,
+  LoginPayload,
+  RegisterPayload,
 } from './types';
 
+const TOKEN_KEY = 'wimb_token';
+
+export function getToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setToken(token: string | null): void {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function isAuthUrl(url: string): boolean {
+  return url.startsWith('/api/auth/');
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const isFormBody = init?.body instanceof FormData;
+  if (!isFormBody) headers['Content-Type'] = 'application/json';
+  if (init?.headers && typeof init.headers === 'object' && !(init.headers instanceof Headers)) {
+    Object.assign(headers, init.headers);
+  }
+
+  const res = await fetch(url, { ...init, headers });
   if (!res.ok) {
+    if (res.status === 401 && !isAuthUrl(url)) {
+      setToken(null);
+      window.dispatchEvent(new Event('wimb:unauthorized'));
+    }
     let message = `Ошибка ${res.status}`;
     try {
       const data = await res.json();
@@ -33,13 +68,38 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
         message = Array.isArray(data.message) ? data.message.join(', ') : data.message;
       }
     } catch {
-      // ignore
+      /* ignore */
     }
     throw new Error(message);
   }
   const text = await res.text();
   if (!text) return undefined as T;
   return JSON.parse(text) as T;
+}
+
+async function requestBlob(
+  url: string,
+  init?: RequestInit,
+): Promise<{ data: Blob; fileName: string }> {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(url, { ...init, headers });
+  if (!res.ok) {
+    if (res.status === 401) {
+      setToken(null);
+      window.dispatchEvent(new Event('wimb:unauthorized'));
+    }
+    throw new Error(`Ошибка ${res.status}`);
+  }
+  const data = await res.blob();
+  const cd = res.headers.get('Content-Disposition') || '';
+  const match = cd.match(/filename\*=UTF-8''([^;]+)/);
+  const fallback = cd.match(/filename="?([^";]+)/);
+  const fileName = match
+    ? decodeURIComponent(match[1])
+    : fallback?.[1] || `books-${Date.now()}.sqlite`;
+  return { data, fileName };
 }
 
 function toQuery(params: Record<string, string | undefined>): string {
@@ -50,6 +110,18 @@ function toQuery(params: Record<string, string | undefined>): string {
 }
 
 export const api = {
+  register: (data: RegisterPayload) =>
+    request<AuthResult>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  login: (data: LoginPayload) =>
+    request<AuthResult>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  me: () => request<{ id: number; login: string; fullName: string; canDownloadHisOwnDataBase: boolean }>('/api/auth/me'),
+
   getCategories: () => request<Category[]>('/api/categories'),
   createCategory: (data: { name: string }) =>
     request<Category>('/api/categories', {
@@ -173,14 +245,20 @@ export const api = {
   deleteCostAccount: (id: number) =>
     request<void>(`/api/costs/${id}`, { method: 'DELETE' }),
 
-  getBackups: () => request<BackupInfo[]>('/api/backups'),
-  createBackup: () => request<CreateBackupResult>('/api/backups', { method: 'POST' }),
-  deleteBackup: (name: string) =>
-    request<BackupInfo[]>(`/api/backups/${encodeURIComponent(name)}`, {
-      method: 'DELETE',
-    }),
-  applyBackup: (name: string) =>
-    request<void>(`/api/backups/${encodeURIComponent(name)}/apply`, {
+  getDumps: () => request<DumpInfo[]>('/api/dumps'),
+  createDump: () => request<DumpInfo[]>('/api/dumps', { method: 'POST' }),
+  deleteDump: (id: number) =>
+    request<DumpInfo[]>(`/api/dumps/${id}`, { method: 'DELETE' }),
+  applyDump: (id: number) =>
+    request<void>(`/api/dumps/${id}/apply`, { method: 'POST' }),
+  downloadDump: (id: number) => requestBlob(`/api/dumps/${id}/download`),
+  uploadDump: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return request<DumpInfo[]>('/api/dumps/upload', {
       method: 'POST',
-    }),
+      body: form,
+      headers: {},
+    });
+  },
 };

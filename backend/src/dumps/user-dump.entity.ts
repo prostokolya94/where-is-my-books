@@ -3,28 +3,28 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  Unique,
 } from 'typeorm';
 
-@Entity('unread_category_targets')
-@Unique(['userId', 'categoryId'])
-export class UnreadCategoryTarget {
+@Entity('user_dumps')
+export class UserDump {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: 'integer' })
   userId: number;
 
-  @Column({ type: 'integer' })
-  categoryId: number;
+  @Column()
+  name: string;
 
   @Column({ type: 'integer', default: 0 })
-  target: number;
+  size: number;
+
+  @Column({ type: 'varchar', default: 'server' })
+  source: 'server' | 'upload';
+
+  @Column({ type: 'bytea', nullable: true })
+  data: Buffer | null;
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

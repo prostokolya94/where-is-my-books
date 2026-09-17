@@ -20,33 +20,35 @@ export class TabsService {
     });
   }
 
-  async findAll(): Promise<Tab[]> {
+  async findAll(userId: number): Promise<Tab[]> {
     const tabs = await this.repo.find({
+      where: { userId },
       order: { sortOrder: 'ASC', name: 'ASC' },
     });
     return tabs.map((tab) => this.serialize(tab));
   }
 
-  async findOne(id: number): Promise<Tab> {
-    const tab = await this.repo.findOneBy({ id });
+  async findOne(id: number, userId: number): Promise<Tab> {
+    const tab = await this.repo.findOneBy({ id, userId });
     if (!tab) {
       throw new NotFoundException('Таб не найден');
     }
     return this.serialize(tab);
   }
 
-  async create(dto: CreateTabDto): Promise<Tab> {
+  async create(dto: CreateTabDto, userId: number): Promise<Tab> {
     const tab = this.repo.create({
       name: dto.name,
       filtersJson: TabsService.toFilters(dto),
       sortOrder: dto.sortOrder ?? 0,
+      userId,
     });
     const saved = await this.repo.save(tab);
     return this.serialize(saved);
   }
 
-  async update(id: number, dto: UpdateTabDto): Promise<Tab> {
-    const tab = await this.repo.findOneBy({ id });
+  async update(id: number, dto: UpdateTabDto, userId: number): Promise<Tab> {
+    const tab = await this.repo.findOneBy({ id, userId });
     if (!tab) {
       throw new NotFoundException('Таб не найден');
     }
@@ -57,12 +59,12 @@ export class TabsService {
     return this.serialize(saved);
   }
 
-  async remove(id: number): Promise<void> {
-    const tab = await this.repo.findOneBy({ id });
+  async remove(id: number, userId: number): Promise<void> {
+    const tab = await this.repo.findOneBy({ id, userId });
     if (!tab) {
       throw new NotFoundException('Таб не найден');
     }
-    await this.repo.delete(id);
+    await this.repo.delete({ id, userId });
   }
 
   private serialize(tab: Tab): Tab & { filters: TabFilters } {

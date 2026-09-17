@@ -33,18 +33,19 @@ export class StatsService {
     private readonly categoryRepo: Repository<Category>,
   ) {}
 
-  async getStats(): Promise<StatsResponse> {
+  async getStats(userId: number): Promise<StatsResponse> {
     const statusTotals: Record<BookStatus, number> = {
       [BookStatus.READ]: 0,
       [BookStatus.BOUGHT]: 0,
       [BookStatus.WISHLIST]: 0,
     };
-    const allBooks = await this.bookRepo.find();
+    const allBooks = await this.bookRepo.find({ where: { userId } });
     for (const book of allBooks) {
       statusTotals[book.status] += 1;
     }
 
     const categories = await this.categoryRepo.find({
+      where: { userId },
       order: { sortOrder: 'ASC', id: 'ASC' },
     });
     const categoryNames = new Map<number, string>();
@@ -59,6 +60,7 @@ export class StatsService {
       .leftJoinAndSelect('book.category', 'category')
       .leftJoinAndSelect('book.genre', 'genre')
       .where('book.status != :wishlist', { wishlist: BookStatus.WISHLIST })
+      .andWhere('book.userId = :userId', { userId })
       .getMany();
 
     const tables = new Map<number | null, StatsCategoryTable>();

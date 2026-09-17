@@ -18,6 +18,9 @@ export class PurchasePlanRow {
   id: number;
 
   @Column({ type: 'integer' })
+  userId: number;
+
+  @Column({ type: 'integer' })
   yearId: number;
 
   @Column({ default: '' })

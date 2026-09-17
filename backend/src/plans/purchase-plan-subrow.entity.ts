@@ -16,6 +16,9 @@ export class PurchasePlanSubrow {
   id: number;
 
   @Column({ type: 'integer' })
+  userId: number;
+
+  @Column({ type: 'integer' })
   rowId: number;
 
   @Column({ default: '' })
