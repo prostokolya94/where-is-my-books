@@ -6,12 +6,14 @@ import { User } from './user.entity';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { EventsModule } from '../events/events.module';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    EventsModule,
     JwtModule.register({
       global: true,
       secret: JWT_SECRET,

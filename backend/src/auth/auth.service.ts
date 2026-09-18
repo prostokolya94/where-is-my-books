@@ -9,6 +9,7 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { User } from './user.entity';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { EventsService } from '../events/events.service';
 
 export interface AuthResult {
   token: string;
@@ -27,6 +28,7 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly jwtService: JwtService,
+    private readonly events: EventsService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResult> {
@@ -44,6 +46,7 @@ export class AuthService {
         canDownloadHisOwnDataBase: false,
       }),
     );
+    this.events.record(user.id, 'auth.register', { login }).catch(() => {});
     return this.buildResult(user);
   }
 
@@ -56,6 +59,7 @@ export class AuthService {
     if (!ok) {
       throw new UnauthorizedException('Неверный логин или пароль');
     }
+    this.events.record(user.id, 'auth.login', { login: user.login }).catch(() => {});
     return this.buildResult(user);
   }
 

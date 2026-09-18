@@ -4,6 +4,7 @@ import type {
   Category,
   DumpInfo,
   AdminUser,
+  EventSummaryRow,
   Genre,
   PaginatedBooks,
   PlanRow,
@@ -128,6 +129,34 @@ export const api = {
     request<AdminUser>(`/api/admin/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
+    }),
+  getAdminEventSummary: (from?: string, to?: string, userId?: number) =>
+    request<EventSummaryRow[]>(
+      `/api/admin/events/summary${toQuery({
+        from,
+        to,
+        userId: userId !== undefined ? String(userId) : undefined,
+      })}`,
+    ),
+  getAdminEventBreakdown: (
+    type: string,
+    from?: string,
+    to?: string,
+    userId?: number,
+  ) =>
+    request<EventSummaryRow[]>(
+      `/api/admin/events/breakdown${toQuery({
+        type,
+        key: 'page',
+        from,
+        to,
+        userId: userId !== undefined ? String(userId) : undefined,
+      })}`,
+    ),
+  trackEvent: (type: string, payload?: Record<string, unknown>) =>
+    request<{ ok: boolean }>('/api/events', {
+      method: 'POST',
+      body: JSON.stringify({ type, payload }),
     }),
 
   getCategories: () => request<Category[]>('/api/categories'),

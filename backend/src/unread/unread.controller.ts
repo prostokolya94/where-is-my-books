@@ -2,6 +2,7 @@ import { Controller, Get, Patch, Param, Body } from '@nestjs/common';
 import { UnreadService } from './unread.service';
 import { UpdateUnreadTargetDto } from './dto/unread.dto';
 import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
+import { Track } from '../events/event-track.decorator';
 
 @Controller('unread')
 export class UnreadController {
@@ -13,6 +14,7 @@ export class UnreadController {
   }
 
   @Patch('genres/:id/target')
+  @Track('unread.target.set')
   setGenreTarget(
     @Param('id') id: string,
     @Body() dto: UpdateUnreadTargetDto,

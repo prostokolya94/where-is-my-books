@@ -98,6 +98,13 @@ class AuthStore {
   }
 
   logout(): void {
+    try {
+      api.trackEvent('auth.logout').catch(() => {
+        /* ignore */
+      });
+    } catch {
+      /* ignore */
+    }
     this.user = null;
     setToken(null);
     try { localStorage.removeItem(USER_KEY); } catch { /* ignore */ }

@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { rootStore } from './stores/rootStore';
 import { authStore } from './stores/authStore';
+import { api } from './api/client';
 import Sidebar from './components/Sidebar';
 import UserMenu from './components/UserMenu';
 import BooksPage from './pages/BooksPage';
@@ -20,10 +21,44 @@ import TabEditorModal from './components/TabEditorModal';
 import BackupsModal from './components/BackupsModal';
 import { uiStore } from './stores/uiStore';
 
+function pageFromPath(pathname: string): string | null {
+  if (pathname === '/') return 'books';
+  if (pathname.startsWith('/tabs/')) return 'tab';
+  const map: Record<string, string> = {
+    '/categories': 'categories',
+    '/stats': 'stats',
+    '/plans': 'plans',
+    '/unread': 'unread',
+    '/read': 'read',
+    '/costs': 'costs',
+    '/admin': 'admin',
+  };
+  return map[pathname] ?? null;
+}
+
 const AppShell = observer(() => {
   useEffect(() => {
     rootStore.init();
   }, []);
+
+  const location = useLocation();
+  const lastTracked = useRef<{ path: string; at: number } | null>(null);
+  useEffect(() => {
+    const page = pageFromPath(location.pathname);
+    if (!page) return;
+    const now = Date.now();
+    if (
+      lastTracked.current &&
+      lastTracked.current.path === location.pathname &&
+      now - lastTracked.current.at < 2000
+    ) {
+      return;
+    }
+    lastTracked.current = { path: location.pathname, at: now };
+    api.trackEvent('page.open', { page }).catch(() => {
+      /* ignore */
+    });
+  }, [location.pathname]);
 
   return (
     <div className="app">

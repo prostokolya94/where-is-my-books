@@ -12,6 +12,7 @@ import { CostsModule } from './costs/costs.module';
 import { DumpsModule } from './dumps/dumps.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AdminModule } from './admin/admin.module';
     }),
     AuthModule,
     AdminModule,
+    EventsModule,
     CategoriesModule,
     GenresModule,
     BooksModule,

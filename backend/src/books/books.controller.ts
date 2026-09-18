@@ -11,6 +11,7 @@ import {
 import { BooksService, BookQuery } from './books.service';
 import { CreateBookDto, UpdateBookDto } from './dto/book.dto';
 import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
+import { Track } from '../events/event-track.decorator';
 
 @Controller('books')
 export class BooksController {
@@ -43,16 +44,19 @@ export class BooksController {
   }
 
   @Post()
+  @Track('book.create')
   create(@Body() dto: CreateBookDto, @CurrentUser() user: AuthUser) {
     return this.service.create(dto, user.id);
   }
 
   @Patch(':id')
+  @Track('book.update')
   update(@Param('id') id: string, @Body() dto: UpdateBookDto, @CurrentUser() user: AuthUser) {
     return this.service.update(+id, dto, user.id);
   }
 
   @Delete(':id')
+  @Track('book.delete')
   remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.service.remove(+id, user.id);
   }

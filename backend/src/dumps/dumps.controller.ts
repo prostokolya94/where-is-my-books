@@ -14,6 +14,7 @@ import { memoryStorage } from 'multer';
 import type { Response } from 'express';
 import { DumpsService, DumpInfo } from './dumps.service';
 import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
+import { Track } from '../events/event-track.decorator';
 
 const MAX_UPLOAD_SIZE = 50 * 1024 * 1024;
 
@@ -27,11 +28,13 @@ export class DumpsController {
   }
 
   @Post()
+  @Track('dump.create')
   create(@CurrentUser() user: AuthUser): Promise<DumpInfo[]> {
     return this.service.create(user.id, user.login);
   }
 
   @Get(':id/download')
+  @Track('dump.download')
   async download(
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
@@ -47,6 +50,7 @@ export class DumpsController {
   }
 
   @Post('upload')
+  @Track('dump.upload')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
@@ -65,11 +69,13 @@ export class DumpsController {
   }
 
   @Post(':id/apply')
+  @Track('dump.apply')
   apply(@Param('id') id: string, @CurrentUser() user: AuthUser): Promise<void> {
     return this.service.apply(user.id, +id);
   }
 
   @Delete(':id')
+  @Track('dump.delete')
   remove(@Param('id') id: string, @CurrentUser() user: AuthUser): Promise<DumpInfo[]> {
     return this.service.remove(user.id, +id);
   }

@@ -214,6 +214,12 @@ export interface AdminUser {
   createdAt?: string;
 }
 
+export interface EventSummaryRow {
+  type: string;
+  count: number;
+  lastAt: string | null;
+}
+
 export interface ReadBar {
   categoryId: number | null;
   name: string;
