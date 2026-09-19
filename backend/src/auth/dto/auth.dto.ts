@@ -1,4 +1,5 @@
 import {
+  IsEmail,
   IsString,
   IsNotEmpty,
   MinLength,
@@ -11,6 +12,10 @@ export class RegisterDto {
   @MinLength(3)
   @MaxLength(50)
   login: string;
+
+  @IsEmail()
+  @MaxLength(254)
+  email: string;
 
   @IsString()
   @IsNotEmpty()
@@ -31,5 +36,29 @@ export class LoginDto {
 
   @IsString()
   @IsNotEmpty()
+  password: string;
+}
+
+export class ConfirmEmailDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+}
+
+export class ForgotPasswordDto {
+  @IsEmail()
+  @MaxLength(254)
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(4)
+  @MaxLength(200)
   password: string;
 }

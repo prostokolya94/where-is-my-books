@@ -131,6 +131,13 @@ const Sidebar = observer(() => {
           <span className="sidebar-footer-btn-icon">🗄</span>
           <span>Менеджмент версий</span>
         </button>
+        <button
+          className="sidebar-footer-btn"
+          onClick={() => navigate('/about')}
+        >
+          <span className="sidebar-footer-btn-icon">ℹ</span>
+          <span>О проекте</span>
+        </button>
         <div style={{ marginTop: 8 }}>Where Is My Books · v1.0</div>
       </div>
 

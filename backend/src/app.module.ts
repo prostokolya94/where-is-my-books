@@ -13,6 +13,7 @@ import { DumpsModule } from './dumps/dumps.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { EventsModule } from './events/events.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { EventsModule } from './events/events.module';
     AuthModule,
     AdminModule,
     EventsModule,
+    MailModule,
     CategoriesModule,
     GenresModule,
     BooksModule,

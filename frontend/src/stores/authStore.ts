@@ -73,11 +73,11 @@ class AuthStore {
     }
   }
 
-  async register(login: string, password: string, fullName: string): Promise<void> {
+  async register(login: string, email: string, password: string, fullName: string): Promise<void> {
     this.loading = true;
     this.error = null;
     try {
-      const result = await api.register({ login, password, fullName });
+      const result = await api.register({ login, email, password, fullName });
       this.setSession(result);
     } catch (e) {
       runInAction(() => {

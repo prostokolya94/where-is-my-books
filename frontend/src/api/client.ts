@@ -122,7 +122,26 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  me: () => request<{ id: number; login: string; fullName: string; canDownloadHisOwnDataBase: boolean; isAdmin: boolean }>('/api/auth/me'),
+  me: () => request<{ id: number; login: string; email: string; emailConfirmed: boolean; fullName: string; canDownloadHisOwnDataBase: boolean; isAdmin: boolean }>('/api/auth/me'),
+  confirmEmail: (token: string) =>
+    request<{ ok: boolean; email: string }>('/api/auth/confirm-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
+  forgotPassword: (email: string) =>
+    request<{ ok: boolean }>('/api/auth/forgot', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token: string, password: string) =>
+    request<{ ok: boolean }>('/api/auth/reset', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    }),
+  resendConfirm: () =>
+    request<{ ok: boolean }>('/api/auth/resend-confirm', {
+      method: 'POST',
+    }),
 
   getAdminUsers: () => request<AdminUser[]>('/api/admin/users'),
   updateAdminUser: (id: number, data: { isAdmin?: boolean; canDownloadHisOwnDataBase?: boolean }) =>

@@ -66,6 +66,8 @@ const LoginPage = observer(() => {
         <div className="auth-footer">
           Нет аккаунта?{' '}
           <Link to="/register">Зарегистрируйтесь</Link>
+          <span className="auth-footer-sep">·</span>
+          <Link to="/forgot">Забыли пароль?</Link>
         </div>
       </div>
     </div>

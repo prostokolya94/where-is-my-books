@@ -5,6 +5,7 @@ import { authStore } from '../stores/authStore';
 
 const RegisterPage = observer(() => {
   const [login, setLogin] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const RegisterPage = observer(() => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await authStore.register(login.trim(), password, fullName.trim());
+      await authStore.register(login.trim(), email.trim(), password, fullName.trim());
       navigate('/', { replace: true });
     } catch {
       // error handled in store
@@ -59,6 +60,16 @@ const RegisterPage = observer(() => {
               placeholder="Пароль (от 4 символов)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="form-field">
+            <label>Email</label>
+            <input
+              type="email"
+              autoComplete="email"
+              placeholder="Для подтверждения и сброса пароля"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div>

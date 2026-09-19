@@ -180,6 +180,7 @@ export interface LoginPayload {
 
 export interface RegisterPayload {
   login: string;
+  email: string;
   password: string;
   fullName: string;
 }
@@ -187,6 +188,8 @@ export interface RegisterPayload {
 export interface AuthUser {
   id: number;
   login: string;
+  email: string;
+  emailConfirmed: boolean;
   fullName: string;
   canDownloadHisOwnDataBase: boolean;
   isAdmin: boolean;
