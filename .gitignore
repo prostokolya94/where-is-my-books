@@ -3,3 +3,4 @@ dist
 *.log
 backend/data/
 .env
+deploy.config.json

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { CategoriesModule } from './categories/categories.module';
 import { GenresModule } from './genres/genres.module';
 import { BooksModule } from './books/books.module';
@@ -14,9 +15,18 @@ import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { EventsModule } from './events/events.module';
 import { MailModule } from './mail/mail.module';
+import { FlagsModule } from './flags/flags.module';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60_000,
+        limit: 60,
+      },
+    ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
@@ -25,13 +35,14 @@ import { MailModule } from './mail/mail.module';
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_NAME || 'books',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
+      synchronize: (process.env.DB_SYNC || 'false').toLowerCase() === 'true',
       autoLoadEntities: true,
     }),
     AuthModule,
     AdminModule,
     EventsModule,
     MailModule,
+    FlagsModule,
     CategoriesModule,
     GenresModule,
     BooksModule,
@@ -43,5 +54,6 @@ import { MailModule } from './mail/mail.module';
     CostsModule,
     DumpsModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

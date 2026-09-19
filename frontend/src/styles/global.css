@@ -2364,6 +2364,26 @@ textarea {
   font-weight: 500;
 }
 
+.admin-flag-key {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  margin-top: 2px;
+}
+
+.admin-flag-row-flash {
+  animation: admin-flag-flash 0.9s ease-out;
+}
+
+@keyframes admin-flag-flash {
+  0% {
+    background-color: rgba(28, 116, 142, 0.16);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
 .admin-section {
   margin-bottom: 28px;
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -13,6 +14,8 @@ import { AdminGuard } from './admin.guard';
 import { UpdateUserAdminDto } from './admin.dto';
 import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
 import { EventsService, EventSummaryRow } from '../events/events.service';
+import { FlagsService } from '../flags/flags.service';
+import { AppFlag } from '../flags/flag.entity';
 
 @Controller('admin')
 @UseGuards(AdminGuard)
@@ -20,7 +23,25 @@ export class AdminController {
   constructor(
     private readonly service: AdminService,
     private readonly events: EventsService,
+    private readonly flags: FlagsService,
   ) {}
+
+  @Get('flags')
+  flagsList(): Promise<AppFlag[]> {
+    return this.flags.list();
+  }
+
+  @Patch('flags/:name')
+  flagsUpdate(
+    @Param('name') name: string,
+    @Body('enabled') enabled: string,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<AppFlag> {
+    if (typeof enabled !== 'boolean') {
+      throw new BadRequestException('enabled должен быть булевым значением');
+    }
+    return this.flags.set(name, enabled, actor.id);
+  }
 
   @Get('users')
   list(): Promise<AdminUserView[]> {

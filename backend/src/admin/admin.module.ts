@@ -5,9 +5,10 @@ import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
 import { AdminGuard } from './admin.guard';
 import { EventsModule } from '../events/events.module';
+import { FlagsModule } from '../flags/flags.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), EventsModule],
+  imports: [TypeOrmModule.forFeature([User]), EventsModule, FlagsModule],
   controllers: [AdminController],
   providers: [AdminService, AdminGuard],
 })

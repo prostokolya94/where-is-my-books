@@ -1,4 +1,5 @@
 import type {
+  AppFlag,
   AuthResult,
   Book,
   Category,
@@ -148,6 +149,12 @@ export const api = {
     request<AdminUser>(`/api/admin/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
+    }),
+  getFlags: () => request<AppFlag[]>('/api/flags'),
+  updateFlag: (name: string, enabled: boolean) =>
+    request<AppFlag>(`/api/admin/flags/${encodeURIComponent(name)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled }),
     }),
   getAdminEventSummary: (from?: string, to?: string, userId?: number) =>
     request<EventSummaryRow[]>(

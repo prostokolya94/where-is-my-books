@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { api } from '../api/client';
 import { authStore } from '../stores/authStore';
+import { flagsStore } from '../stores/flagsStore';
 import Modal from '../components/Modal';
 import type { AdminUser, EventSummaryRow } from '../api/types';
 
@@ -41,6 +42,7 @@ const EVENT_LABELS: Record<string, string> = {
   'dump.download': 'Скачивание версии БД',
   'dump.upload': 'Загрузка версии БД',
   'dump.delete': 'Удаление версии БД',
+  'admin.setFlag': 'Изменение доступности страницы',
 };
 
 const PAGE_LABELS: Record<string, string> = {
@@ -181,6 +183,9 @@ const AdminPage = observer(() => {
   const [drillRows, setDrillRows] = useState<EventSummaryRow[]>([]);
   const [drillLoading, setDrillLoading] = useState(false);
 
+  const [busyFlags, setBusyFlags] = useState<Set<string>>(new Set());
+  const [lastToggled, setLastToggled] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -244,6 +249,24 @@ const AdminPage = observer(() => {
     },
     [period.from, period.to, users],
   );
+
+  const toggleFlag = async (name: string, enabled: boolean) => {
+    setBusyFlags((prev) => new Set(prev).add(name));
+    setError(null);
+    setLastToggled(null);
+    try {
+      await flagsStore.set(name, enabled);
+      setLastToggled(name);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось обновить доступность страницы');
+    } finally {
+      setBusyFlags((prev) => {
+        const next = new Set(prev);
+        next.delete(name);
+        return next;
+      });
+    }
+  };
 
   const setField = async (id: number, data: { isAdmin?: boolean; canDownloadHisOwnDataBase?: boolean }) => {
     setBusyIds((prev) => new Set(prev).add(id));
@@ -380,6 +403,55 @@ const AdminPage = observer(() => {
             </table>
           </div>
         )}
+      </div>
+
+      <div className="admin-section">
+        <div className="admin-section-header">
+          <h2 className="admin-section-title">Доступность страниц</h2>
+          <div style={{ fontSize: 13, color: 'var(--muted)' }}>
+            Отключённые вкладки скроются из меню и будут недоступны по прямой ссылке
+          </div>
+        </div>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Страница</th>
+                <th>Доступна</th>
+              </tr>
+            </thead>
+            <tbody>
+              {flagsStore.flags.length === 0 && (
+                <tr>
+                  <td colSpan={2} className="admin-table-empty">
+                    Флаги не загружены
+                  </td>
+                </tr>
+              )}
+              {flagsStore.flags.map((flag) => (
+                <tr
+                  key={flag.name}
+                  className={
+                    lastToggled === flag.name ? 'admin-flag-row admin-flag-row-flash' : 'admin-flag-row'
+                  }
+                >
+                  <td>
+                    <div>{flag.label}</div>
+                    <div className="admin-flag-key">{flag.name}</div>
+                  </td>
+                  <td>
+                    <Toggle
+                      value={flag.enabled}
+                      disabled={busyFlags.has(flag.name)}
+                      title={flag.enabled ? 'Страница доступна' : 'Страница отключена'}
+                      onChange={(enabled) => toggleFlag(flag.name, enabled)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {modalUser && (

@@ -223,6 +223,13 @@ export interface EventSummaryRow {
   lastAt: string | null;
 }
 
+export interface AppFlag {
+  name: string;
+  label: string;
+  enabled: boolean;
+  updatedAt?: string;
+}
+
 export interface ReadBar {
   categoryId: number | null;
   name: string;

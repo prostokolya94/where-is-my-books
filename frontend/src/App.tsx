@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { rootStore } from './stores/rootStore';
 import { authStore } from './stores/authStore';
+import { flagsStore } from './stores/flagsStore';
 import { api } from './api/client';
 import Sidebar from './components/Sidebar';
 import UserMenu from './components/UserMenu';
@@ -41,6 +43,24 @@ function pageFromPath(pathname: string): string | null {
   return map[pathname] ?? null;
 }
 
+const PageGuard = observer(
+  ({ flag, children }: { flag: string; children: ReactNode }) => {
+    if (flagsStore.isEnabled(flag)) return <>{children}</>;
+    return <Navigate to={flagsStore.fallbackPath()} replace />;
+  },
+);
+
+const LockedPage = () => (
+  <div className="page">
+    <div className="page-header">
+      <h1 className="page-title">Страницы отключены</h1>
+      <p className="page-subtitle">
+        Администратор отключил доступные вкладки. Загляните позже.
+      </p>
+    </div>
+  </div>
+);
+
 const AppShell = observer(() => {
   useEffect(() => {
     rootStore.init();
@@ -75,20 +95,90 @@ const AppShell = observer(() => {
         </div>
         <ConfirmEmailBanner />
         <Routes>
-          <Route path="/" element={<BooksPage />} />
-          <Route path="/tabs/:tabId" element={<TabPage />} />
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/stats" element={<StatsPage />} />
-          <Route path="/plans" element={<PlansPage />} />
-          <Route path="/unread" element={<UnreadMonitoringPage />} />
-          <Route path="/read" element={<ReadMonitoringPage />} />
-          <Route path="/costs" element={<CostPage />} />
-          <Route path="/about" element={<AboutPage />} />
+          <Route
+            path="/"
+            element={
+              <PageGuard flag="page.books">
+                <BooksPage />
+              </PageGuard>
+            }
+          />
+          <Route
+            path="/tabs/:tabId"
+            element={
+              <PageGuard flag="page.tabs">
+                <TabPage />
+              </PageGuard>
+            }
+          />
+          <Route
+            path="/categories"
+            element={
+              <PageGuard flag="page.categories">
+                <CategoriesPage />
+              </PageGuard>
+            }
+          />
+          <Route
+            path="/stats"
+            element={
+              <PageGuard flag="page.stats">
+                <StatsPage />
+              </PageGuard>
+            }
+          />
+          <Route
+            path="/plans"
+            element={
+              <PageGuard flag="page.plans">
+                <PlansPage />
+              </PageGuard>
+            }
+          />
+          <Route
+            path="/unread"
+            element={
+              <PageGuard flag="page.unread">
+                <UnreadMonitoringPage />
+              </PageGuard>
+            }
+          />
+          <Route
+            path="/read"
+            element={
+              <PageGuard flag="page.read">
+                <ReadMonitoringPage />
+              </PageGuard>
+            }
+          />
+          <Route
+            path="/costs"
+            element={
+              <PageGuard flag="page.costs">
+                <CostPage />
+              </PageGuard>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <PageGuard flag="page.about">
+                <AboutPage />
+              </PageGuard>
+            }
+          />
           <Route
             path="/admin"
-            element={authStore.isAdmin ? <AdminPage /> : <Navigate to="/" replace />}
+            element={
+              authStore.isAdmin ? (
+                <AdminPage />
+              ) : (
+                <Navigate to={flagsStore.fallbackPath()} replace />
+              )
+            }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/locked" element={<LockedPage />} />
+          <Route path="*" element={<Navigate to={flagsStore.fallbackPath()} replace />} />
         </Routes>
       </main>
       <TabEditorModal />
@@ -100,6 +190,7 @@ const AppShell = observer(() => {
 const App = observer(() => {
   useEffect(() => {
     authStore.init();
+    flagsStore.init();
   }, []);
 
   if (!authStore.initialized) {
@@ -116,8 +207,14 @@ const App = observer(() => {
   if (authStore.isAuthenticated) {
     return (
       <Routes>
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="/register" element={<Navigate to="/" replace />} />
+        <Route
+          path="/login"
+          element={<Navigate to={flagsStore.fallbackPath()} replace />}
+        />
+        <Route
+          path="/register"
+          element={<Navigate to={flagsStore.fallbackPath()} replace />}
+        />
         <Route path="*" element={<AppShell />} />
       </Routes>
     );
@@ -125,13 +222,30 @@ const App = observer(() => {
 
   return (
     <Routes>
-      <Route path="/about" element={<AboutPage />} />
+      <Route
+        path="/about"
+        element={
+          flagsStore.isEnabled('page.about') ? (
+            <AboutPage />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-      <Route path="*" element={<Navigate to="/about" replace />} />
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to={flagsStore.isEnabled('page.about') ? '/about' : '/login'}
+            replace
+          />
+        }
+      />
     </Routes>
   );
 });

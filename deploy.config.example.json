@@ -1,0 +1,8 @@
+{
+  "host": "SERVER_IP_OR_DOMAIN",
+  "user": "deploy",
+  "sshPort": 22,
+  "remoteDir": "/srv/where-is-my-books",
+  "backendService": "wimb-backend",
+  "healthUrl": "http://127.0.0.1:3001/api/health"
+}

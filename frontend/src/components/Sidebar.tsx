@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { rootStore } from '../stores/rootStore';
 import { uiStore } from '../stores/uiStore';
+import { flagsStore } from '../stores/flagsStore';
 import ConfirmDialog from './ConfirmDialog';
 import type { Tab } from '../api/types';
 
@@ -35,109 +36,129 @@ const Sidebar = observer(() => {
       <div className="sidebar-section">
         <div className="sidebar-section-label">Библиотека</div>
         <nav className="sidebar-nav">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">▤</span>
-            <span>Все книги</span>
-          </NavLink>
-          <NavLink
-            to="/stats"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">▥</span>
-            <span>Статистика</span>
-          </NavLink>
-          <NavLink
-            to="/plans"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">▦</span>
-            <span>План покупок</span>
-          </NavLink>
-          <NavLink
-            to="/unread"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">▧</span>
-            <span>Мониторинг непрочитанного</span>
-          </NavLink>
-          <NavLink
-            to="/read"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">▨</span>
-            <span>Мониторинг прочитанного</span>
-          </NavLink>
-          <NavLink
-            to="/costs"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">₽</span>
-            <span>Стоимость библиотеки</span>
-          </NavLink>
-        </nav>
-      </div>
-
-      <div className="sidebar-section">
-        <div className="sidebar-section-label">Табы</div>
-        <nav className="sidebar-nav">
-          {tabs.tabs.map((tab) => (
+          {flagsStore.isEnabled('page.books') && (
             <NavLink
-              key={tab.id}
-              to={`/tabs/${tab.id}`}
-              className={({ isActive }) => `sidebar-link sidebar-link-tab ${isActive ? 'active' : ''}`}
+              to="/"
+              end
+              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             >
-              <span className="nav-dot" />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                {tab.name}
-              </span>
-              <button
-                className="sidebar-tab-delete"
-                title="Удалить таб"
-                onClick={(e) => { e.preventDefault(); setDeleteTarget(tab); }}
-              >
-                ✕
-              </button>
+              <span className="nav-icon">▤</span>
+              <span>Все книги</span>
             </NavLink>
-          ))}
-          <button className="sidebar-add" onClick={() => uiStore.openNewTab()}>
-            <span className="sidebar-add-icon" />
-            <span>Новый таб</span>
-          </button>
+          )}
+          {flagsStore.isEnabled('page.stats') && (
+            <NavLink
+              to="/stats"
+              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            >
+              <span className="nav-icon">▥</span>
+              <span>Статистика</span>
+            </NavLink>
+          )}
+          {flagsStore.isEnabled('page.plans') && (
+            <NavLink
+              to="/plans"
+              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            >
+              <span className="nav-icon">▦</span>
+              <span>План покупок</span>
+            </NavLink>
+          )}
+          {flagsStore.isEnabled('page.unread') && (
+            <NavLink
+              to="/unread"
+              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            >
+              <span className="nav-icon">▧</span>
+              <span>Мониторинг непрочитанного</span>
+            </NavLink>
+          )}
+          {flagsStore.isEnabled('page.read') && (
+            <NavLink
+              to="/read"
+              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            >
+              <span className="nav-icon">▨</span>
+              <span>Мониторинг прочитанного</span>
+            </NavLink>
+          )}
+          {flagsStore.isEnabled('page.costs') && (
+            <NavLink
+              to="/costs"
+              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            >
+              <span className="nav-icon">₽</span>
+              <span>Стоимость библиотеки</span>
+            </NavLink>
+          )}
         </nav>
       </div>
 
-      <div className="sidebar-section">
-        <div className="sidebar-section-label">Справочники</div>
-        <nav className="sidebar-nav">
-          <NavLink
-            to="/categories"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">☰</span>
-            <span>Категории и жанры</span>
-          </NavLink>
-        </nav>
-      </div>
+      {flagsStore.isEnabled('page.tabs') && (
+        <div className="sidebar-section">
+          <div className="sidebar-section-label">Табы</div>
+          <nav className="sidebar-nav">
+            {tabs.tabs.map((tab) => (
+              <NavLink
+                key={tab.id}
+                to={`/tabs/${tab.id}`}
+                className={({ isActive }) => `sidebar-link sidebar-link-tab ${isActive ? 'active' : ''}`}
+              >
+                <span className="nav-dot" />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                  {tab.name}
+                </span>
+                <button
+                  className="sidebar-tab-delete"
+                  title="Удалить таб"
+                  onClick={(e) => { e.preventDefault(); setDeleteTarget(tab); }}
+                >
+                  ✕
+                </button>
+              </NavLink>
+            ))}
+            <button className="sidebar-add" onClick={() => uiStore.openNewTab()}>
+              <span className="sidebar-add-icon" />
+              <span>Новый таб</span>
+            </button>
+          </nav>
+        </div>
+      )}
+
+      {flagsStore.isEnabled('page.categories') && (
+        <div className="sidebar-section">
+          <div className="sidebar-section-label">Справочники</div>
+          <nav className="sidebar-nav">
+            <NavLink
+              to="/categories"
+              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            >
+              <span className="nav-icon">☰</span>
+              <span>Категории и жанры</span>
+            </NavLink>
+          </nav>
+        </div>
+      )}
 
       <div className="sidebar-footer">
-        <button
-          className="sidebar-footer-btn"
-          onClick={() => uiStore.openBackups()}
-        >
-          <span className="sidebar-footer-btn-icon">🗄</span>
-          <span>Менеджмент версий</span>
-        </button>
-        <button
-          className="sidebar-footer-btn"
-          onClick={() => navigate('/about')}
-        >
-          <span className="sidebar-footer-btn-icon">ℹ</span>
-          <span>О проекте</span>
-        </button>
+        {flagsStore.isEnabled('page.backups') && (
+          <button
+            className="sidebar-footer-btn"
+            onClick={() => uiStore.openBackups()}
+          >
+            <span className="sidebar-footer-btn-icon">🗄</span>
+            <span>Менеджмент версий</span>
+          </button>
+        )}
+        {flagsStore.isEnabled('page.about') && (
+          <button
+            className="sidebar-footer-btn"
+            onClick={() => navigate('/about')}
+          >
+            <span className="sidebar-footer-btn-icon">ℹ</span>
+            <span>О проекте</span>
+          </button>
+        )}
         <div style={{ marginTop: 8 }}>Where Is My Books · v1.0</div>
       </div>
 
